@@ -1,0 +1,25 @@
+# fastapi
+# uvicorn[standard]
+# motor
+# redis
+# python-jose[cryptography]
+# passlib[argon2]
+# python-multipart
+# python-dotenv
+# httpx
+# authlib
+
+fastapi
+uvicorn[standard]
+gunicorn
+motor
+redis
+python-jose[cryptography]
+passlib[argon2]
+python-multipart
+python-dotenv
+httpx
+authlib
+itsdangerous
+pydantic[email]==2.12.5
+email-validator==2.3.0
