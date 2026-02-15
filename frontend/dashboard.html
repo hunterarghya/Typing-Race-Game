@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Typing Game - Profile</title>
+  </head>
+  <body>
+    <h1>User Profile</h1>
+    <div id="profile-details">
+      <p>Loading profile...</p>
+    </div>
+    <button onclick="handleLogout()">Logout</button>
+
+    <script src="script.js"></script>
+    <script>
+      // Auto-load profile on page load
+      window.onload = fetchProfile;
+    </script>
+  </body>
+</html>
+
+<script src="script.js"></script>
+<script>
+  // Ensure the script.js logic has finished before calling fetch
+  window.onload = function () {
+    if (localStorage.getItem("access_token")) {
+      fetchProfile();
+    }
+  };
+</script>

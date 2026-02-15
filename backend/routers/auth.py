@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from backend.models.users import UserCreate, UserInDB, UserProfile
 from backend.auth.pwd_utils import hash_password, verify_password, create_access_token
 from backend.auth.otp_service import generate_otp, verify_otp
@@ -119,13 +120,16 @@ async def google_callback(request: Request):
 
         # 5. Return the token to the frontend
         # Usually, redirect back to your frontend with the token in the URL or a cookie
-        return {
-            "access_token": access_token, 
-            "token_type": "bearer",
-            "user": {
-                "email": user_info['email'],
-                "name": user_info.get('name')
-            }
-        }
+        # return {
+        #     "access_token": access_token, 
+        #     "token_type": "bearer",
+        #     "user": {
+        #         "email": user_info['email'],
+        #         "name": user_info.get('name')
+        #     }
+        # }
+        response = RedirectResponse(url=f"/static/dashboard.html?token={access_token}")
+        return response
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        # raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        return RedirectResponse(url="/static/index.html?error=google_auth_failed")

@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from backend.routers import auth
@@ -19,8 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
 app.include_router(auth.router)
 
 @app.get("/")
 async def root():
-    return {"message": "Typing Game Backend Active"}
+    return RedirectResponse(url="/static/index.html")
