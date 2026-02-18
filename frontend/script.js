@@ -170,6 +170,47 @@ async function fetchProfile() {
   }
 }
 
+// script.js additions
+
+let pendingRedirectUrl = "";
+
+async function createNewGame(mode) {
+  const token = localStorage.getItem("access_token");
+  try {
+    const response = await fetch(`${API_URL}/game/create/${mode}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await handleResponse(response);
+
+    if (mode === "bot") {
+      // For bot mode, go straight to the arena
+      window.location.href = data.redirect_url;
+    } else {
+      // For private mode, show the link first so they can copy it
+      const inviteSection = document.getElementById("invite-section");
+      const inviteInput = document.getElementById("invite-link");
+
+      // Construct the full URL for the friend
+      const fullUrl = window.location.origin + "/static" + data.redirect_url;
+      inviteInput.value = fullUrl;
+      inviteSection.style.display = "block";
+
+      // Store the local redirect URL (which is relative)
+      pendingRedirectUrl = data.redirect_url;
+    }
+  } catch (err) {
+    alert("Error creating game: " + err.message);
+  }
+}
+
+function goToArena() {
+  if (pendingRedirectUrl) {
+    window.location.href = "/static" + pendingRedirectUrl;
+  }
+}
+
 function handleLogout() {
   localStorage.removeItem("access_token");
   window.location.href = "index.html";

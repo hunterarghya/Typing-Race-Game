@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arena - Pro Typing Game</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="arena-body">
+    <div class="arena-wrapper">
+      <div id="game-stats">
+        <div class="stat-card">WPM: <span id="wpm">0</span></div>
+        <div class="stat-card">Time: <span id="timer">60</span>s</div>
+        <div class="stat-card">Accuracy: <span id="accuracy">100</span>%</div>
+      </div>
+
+      <div id="arena-main">
+        <div id="text-display">Loading paragraph...</div>
+
+        <input type="text" id="keyboard-handler" autofocus autocomplete="off" />
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-label">Opponent (Bot/Friend)</div>
+        <div class="progress-container">
+          <div id="opponent-bar" class="bar"></div>
+        </div>
+      </div>
+
+      <button onclick="window.location.href='dashboard.html'" class="exit-btn">
+        Exit Arena
+      </button>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>

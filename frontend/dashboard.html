@@ -9,6 +9,29 @@
     <div id="profile-details">
       <p>Loading profile...</p>
     </div>
+
+    <hr />
+    <h3>Start a Game</h3>
+    <div id="game-controls">
+      <button onclick="createNewGame('bot')">Play with Bot</button>
+      <button onclick="createNewGame('private')">Create Game Link</button>
+    </div>
+
+    <div
+      id="invite-section"
+      style="
+        display: none;
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+      "
+    >
+      <p>Share this link with a friend:</p>
+      <input type="text" id="invite-link" readonly style="width: 80%" />
+      <button onclick="goToArena()">Join Game</button>
+    </div>
+
+    <br />
     <button onclick="handleLogout()">Logout</button>
 
     <script src="script.js"></script>
