@@ -8,22 +8,42 @@
   </head>
   <body class="arena-body">
     <div class="arena-wrapper">
+      <div id="lobby-zone">
+        <h2>Game Lobby</h2>
+        <p id="lobby-status">Waiting for players to connect...</p>
+        <button id="ready-btn" onclick="sendReady()" class="main-btn">
+          I'm Ready
+        </button>
+      </div>
+
       <div id="game-stats">
-        <div class="stat-card">WPM: <span id="wpm">0</span></div>
-        <div class="stat-card">Time: <span id="timer">60</span>s</div>
-        <div class="stat-card">Accuracy: <span id="accuracy">100</span>%</div>
+        <div class="stat-group">
+          <small>YOU</small>
+          <div>WPM: <span id="wpm">0</span></div>
+          <div>Acc: <span id="accuracy">100</span>%</div>
+        </div>
+
+        <div class="timer-zone">
+          <div id="timer">60</div>
+          <small>SECONDS</small>
+        </div>
+
+        <div class="stat-group align-right">
+          <small>OPPONENT</small>
+          <div>WPM: <span id="opp-wpm">0</span></div>
+          <div>Acc: <span id="opp-accuracy">100</span>%</div>
+        </div>
       </div>
 
       <div id="arena-main">
-        <div id="text-display">Loading paragraph...</div>
-
+        <div id="text-display">Connect to start...</div>
         <input type="text" id="keyboard-handler" autofocus autocomplete="off" />
       </div>
 
       <div class="progress-section">
-        <div class="progress-label">Opponent (Bot/Friend)</div>
         <div class="progress-container">
-          <div id="opponent-bar" class="bar"></div>
+          <div id="my-bar" class="bar self"></div>
+          <div id="opponent-bar" class="bar opp"></div>
         </div>
       </div>
 

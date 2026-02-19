@@ -100,3 +100,8 @@ body.arena-body {
   position: absolute;
   z-index: -1;
 }
+
+.char.opponent-ghost {
+  background-color: rgba(0, 255, 0, 0.2); /* Light green highlight */
+  border-bottom: 2px solid green;
+}

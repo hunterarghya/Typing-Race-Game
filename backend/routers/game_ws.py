@@ -59,12 +59,17 @@ async def game_websocket(websocket: WebSocket, room_id: str, token: str):
         while True:
             data = await websocket.receive_text()
             message = json.loads(data)
+
+            if message.get("type") == "ready":
+                await manager.set_ready(room_id, user_id)
             
             if message.get("type") == "progress":
                 await manager.broadcast_to_room(room_id, {
                     "type": "opponent_progress",
                     "user_id": user_id,
-                    "charIndex": message["charIndex"]
+                    "charIndex": message["charIndex"],
+                    "wpm": message.get("wpm", "0"),
+                    "accuracy": message.get("accuracy", "100")
                 })
                 
     except WebSocketDisconnect:

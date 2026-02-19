@@ -1,24 +1,16 @@
 const API_URL = "http://localhost:10000";
 
-/**
- * 1. IMMEDIATE TOKEN CAPTURE
- * This must run before EVERYTHING else.
- */
 const urlParams = new URLSearchParams(window.location.search);
 const tokenFromUrl = urlParams.get("token");
 
 if (tokenFromUrl) {
   console.log("Token captured from URL!");
   localStorage.setItem("access_token", tokenFromUrl);
-  // Remove token from URL so it doesn't look messy
+
   const cleanUrl = window.location.pathname;
   window.history.replaceState({}, document.title, cleanUrl);
 }
 
-/**
- * 2. PAGE PROTECTION
- * We check if we are allowed to be here immediately.
- */
 const currentToken = localStorage.getItem("access_token");
 const isDashboard = window.location.pathname.includes("dashboard.html");
 
@@ -31,11 +23,17 @@ if (isDashboard && !currentToken) {
 
 function saveTokenAndRedirect(data) {
   localStorage.setItem("access_token", data.access_token);
-  window.location.href = "dashboard.html";
+
+  const pendingGame = localStorage.getItem("redirect_after_login");
+  if (pendingGame) {
+    localStorage.removeItem("redirect_after_login");
+    window.location.href = pendingGame;
+  } else {
+    window.location.href = "dashboard.html";
+  }
 }
 
 async function handleResponse(response) {
-  // If the backend says the token is dead (401), we MUST clear and redirect
   if (response.status === 401) {
     localStorage.removeItem("access_token");
     if (isDashboard) window.location.href = "index.html";
@@ -84,7 +82,7 @@ async function handleVerifyRegistration() {
   );
 
   alert(data.message);
-  location.reload(); // Refresh to show login
+  location.reload();
 }
 
 // --- LOGIN ---
@@ -148,7 +146,7 @@ async function handleResetPassword() {
 
 async function fetchProfile() {
   const token = localStorage.getItem("access_token");
-  if (!token) return; // Protection logic above handles the redirect
+  if (!token) return;
 
   try {
     const response = await fetch(`${API_URL}/auth/me`, {
@@ -166,11 +164,8 @@ async function fetchProfile() {
         `;
   } catch (err) {
     console.error("Profile load failed:", err);
-    // We don't redirect here anymore because handleResponse handles 401s
   }
 }
-
-// script.js additions
 
 let pendingRedirectUrl = "";
 
@@ -184,21 +179,23 @@ async function createNewGame(mode) {
 
     const data = await handleResponse(response);
 
+    const currentDir = window.location.pathname.substring(
+      0,
+      window.location.pathname.lastIndexOf("/") + 1,
+    );
+
     if (mode === "bot") {
-      // For bot mode, go straight to the arena
-      window.location.href = data.redirect_url;
+      window.location.href = currentDir + data.redirect_url;
     } else {
-      // For private mode, show the link first so they can copy it
       const inviteSection = document.getElementById("invite-section");
       const inviteInput = document.getElementById("invite-link");
 
-      // Construct the full URL for the friend
-      const fullUrl = window.location.origin + "/static" + data.redirect_url;
+      const fullUrl = window.location.origin + currentDir + data.redirect_url;
+
       inviteInput.value = fullUrl;
       inviteSection.style.display = "block";
 
-      // Store the local redirect URL (which is relative)
-      pendingRedirectUrl = data.redirect_url;
+      pendingRedirectUrl = currentDir + data.redirect_url;
     }
   } catch (err) {
     alert("Error creating game: " + err.message);
@@ -207,7 +204,7 @@ async function createNewGame(mode) {
 
 function goToArena() {
   if (pendingRedirectUrl) {
-    window.location.href = "/static" + pendingRedirectUrl;
+    window.location.href = pendingRedirectUrl;
   }
 }
 
