@@ -50,5 +50,5 @@ async def spawn_bot(manager, room_id: str, target_wpm: int, paragraph: str):
         })
 
         # Add 20% randomness to the speed so it looks human
-        actual_delay = delay_per_char * random.uniform(0.8, 1.2)
+        actual_delay = delay_per_char * random.uniform(0.6, 1.4)
         await asyncio.sleep(actual_delay)

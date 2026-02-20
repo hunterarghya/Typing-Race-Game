@@ -7,6 +7,7 @@ from backend.game.engine import spawn_bot
 from backend.core.redis_client import redis_client
 from typing import Dict, Set
 from bson import ObjectId
+import random
 
 class ConnectionManager:
     def __init__(self):
@@ -48,24 +49,52 @@ class ConnectionManager:
                 # --- BUILD USER MAP WITH OBJECTID ---
                 user_map = {}
                 player_ids = list(self.active_rooms.get(room_id, {}).keys())
+
+                # --- BOT SPEED CALCULATION ---
+                bot_wpm = 40  # Default base speed
                 
                 for p_id in player_ids:
                     try:
-                        # Convert the string ID from WebSocket/Redis back to a MongoDB ObjectId
                         user_doc = await users_col.find_one({"_id": ObjectId(p_id)})
-                        
                         if user_doc:
-                            # Use "username" or fallback to "name" or "Guest"
-                            user_map[p_id] = user_doc.get("username") or user_doc.get("name") or "Guest"
+                            user_name = user_doc.get("username") or user_doc.get("name") or "Guest"
+                            user_map[p_id] = user_name
+                            
+                            # If it's a bot game, use this user's high score to set the bot's speed
+                            if is_bot_game:
+                                user_high_speed = user_doc.get("highest_speed", 0)
+                                if user_high_speed >= 40:
+                                    # Randomly choose between +5 and +10 of their best
+                                    bot_wpm = user_high_speed + random.randint(5, 10)
+                                else:
+                                    bot_wpm = 40
                         else:
                             user_map[p_id] = "Guest"
                     except Exception as e:
-                        print(f"Error fetching username for {p_id}: {e}")
+                        print(f"Error fetching user data: {e}")
                         user_map[p_id] = "Guest"
                 
                 if is_bot_game:
                     user_map["bot_user"] = "Monkey 🐒"
-                # --------------------------------------------
+                # ------------------------------
+                
+                # for p_id in player_ids:
+                #     try:
+                #         # Convert the string ID from WebSocket/Redis back to a MongoDB ObjectId
+                #         user_doc = await users_col.find_one({"_id": ObjectId(p_id)})
+                        
+                #         if user_doc:
+                #             # Use "username" or fallback to "name" or "Guest"
+                #             user_map[p_id] = user_doc.get("username") or user_doc.get("name") or "Guest"
+                #         else:
+                #             user_map[p_id] = "Guest"
+                #     except Exception as e:
+                #         print(f"Error fetching username for {p_id}: {e}")
+                #         user_map[p_id] = "Guest"
+                
+                # if is_bot_game:
+                #     user_map["bot_user"] = "Monkey 🐒"
+                # # --------------------------------------------
 
                 game_state = {
                     "active": True,
@@ -79,14 +108,15 @@ class ConnectionManager:
                 await self.broadcast_to_room(room_id, {
                     "type": "START_GAME",
                     "paragraph": paragraph,
-                    "user_map": user_map
+                    "user_map": user_map,
+                    "bot_speed": bot_wpm if is_bot_game else None
                 })
 
                 # START SERVER TIMER
                 asyncio.create_task(self.run_game_timer(room_id))
 
                 if is_bot_game:
-                    asyncio.create_task(spawn_bot(self, room_id, 60, paragraph))
+                    asyncio.create_task(spawn_bot(self, room_id, bot_wpm, paragraph))
             else:
                 await self.broadcast_to_room(room_id, {
                     "type": "PLAYER_READY",
