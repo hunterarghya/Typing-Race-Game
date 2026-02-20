@@ -34,19 +34,32 @@
     <br />
     <button onclick="handleLogout()">Logout</button>
 
-    <script src="script.js"></script>
+    <!-- <script src="script.js"></script>
     <script>
       // Auto-load profile on page load
       window.onload = fetchProfile;
+    </script> -->
+
+    <script src="script.js"></script>
+
+    <script>
+      // Consolidated onload logic
+      window.onload = function () {
+        if (localStorage.getItem("access_token")) {
+          fetchProfile();
+        } else {
+          window.location.href = "index.html";
+        }
+      };
     </script>
   </body>
 </html>
 
-<script src="script.js"></script>
-<script>
+<!-- <script src="script.js"></script> -->
+<!-- <script>
   window.onload = function () {
     if (localStorage.getItem("access_token")) {
       fetchProfile();
     }
   };
-</script>
+</script> -->

@@ -148,7 +148,7 @@ class ConnectionManager:
         
         if "players" not in state: state["players"] = {}
         state["players"][user_id] = {
-            "wpm": wpm, 
+            "wpm": int(wpm), 
             "accuracy": accuracy, 
             "charIndex": char_index 
         }
@@ -160,13 +160,60 @@ class ConnectionManager:
             await redis_client.setex(f"state:{room_id}", 3600, json.dumps(state))
             await self.end_game(room_id, "FINISHED", user_id, state["players"])
 
+    # async def end_game(self, room_id: str, reason: str, winner_id: str = None, final_stats: dict = None):
+    #     raw_state = await redis_client.get(f"state:{room_id}")
+    #     if raw_state:
+    #         state = json.loads(raw_state)
+    #         state["active"] = False
+    #         await redis_client.setex(f"state:{room_id}", 3600, json.dumps(state))
+        
+    #     await self.broadcast_to_room(room_id, {
+    #         "type": "GAME_OVER",
+    #         "winner_id": winner_id,
+    #         "reason": reason,
+    #         "final_stats": final_stats
+    #     })
+
     async def end_game(self, room_id: str, reason: str, winner_id: str = None, final_stats: dict = None):
         raw_state = await redis_client.get(f"state:{room_id}")
-        if raw_state:
-            state = json.loads(raw_state)
-            state["active"] = False
-            await redis_client.setex(f"state:{room_id}", 3600, json.dumps(state))
+        if not raw_state: return
         
+        state = json.loads(raw_state)
+        state["active"] = False
+        await redis_client.setex(f"state:{room_id}", 3600, json.dumps(state))
+
+        # ---  UPDATE DATABASE ---
+        if final_stats:
+            is_bot_game = "bot" in room_id
+            
+            for p_id, stats in final_stats.items():
+                if p_id == "bot_user":
+                    continue
+                
+                try:
+                    # 1. Update Highest Speed (Always happens, even vs Bot)
+                    current_wpm = int(stats.get("wpm", 0))
+                    # await users_col.update_one(
+                    #     {"_id": ObjectId(p_id), "highest_speed": {"$lt": current_wpm}},
+                    #     {"$set": {"highest_speed": current_wpm}}
+                    # )
+                    await users_col.update_one(
+                        {"_id": ObjectId(p_id)},
+                        {"$max": {"highest_speed": current_wpm}}
+                    )
+
+                    # 2. Update Rating (Only if NOT a bot game)
+                    if not is_bot_game and winner_id:
+                        # If there is a winner and it's not a tie (None)
+                        change = 5 if p_id == winner_id else -5
+                        await users_col.update_one(
+                            {"_id": ObjectId(p_id)},
+                            {"$inc": {"rating": change}}
+                        )
+                except Exception as e:
+                    print(f"Failed to update stats for {p_id}: {e}")
+        # ----------------------------------
+
         await self.broadcast_to_room(room_id, {
             "type": "GAME_OVER",
             "winner_id": winner_id,

@@ -79,7 +79,29 @@ async def reset_password(email: str, otp: str, new_password: str):
 
 @router.get("/me", response_model=UserProfile)
 async def get_profile(current_user: dict = Depends(get_current_user)):
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
+    #------------------Remove in production-----
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
+
+
+    if "highest_speed" not in current_user:
+        current_user["highest_speed"] = 0
+
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
     return current_user
+    
 
 @router.get("/login/google")
 async def google_login(request: Request):
@@ -106,6 +128,7 @@ async def google_callback(request: Request):
                 "google_id": user_info['sub'],
                 "is_verified": True, # Google already verified the email
                 "rating": 500,
+                "highest_speed": 0,
                 "created_at": datetime.utcnow()
             }
             result = await users_col.insert_one(new_user_data)

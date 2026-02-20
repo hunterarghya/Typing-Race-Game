@@ -159,7 +159,8 @@ async function fetchProfile() {
             <p><strong>Name:</strong> ${data.name}</p>
             <p><strong>Username:</strong> ${data.username}</p>
             <p><strong>Email:</strong> ${data.email}</p>
-            <p><strong>Rating:</strong> ${data.rating}</p>
+            <p><strong>Rating:</strong> ${data.rating} 🏆</p>
+            <p><strong>Highest Speed:</strong> ${data.highest_speed || 0} WPM ⚡</p>
             <p><strong>Verified:</strong> ${data.is_verified ? "✅" : "❌"}</p>
         `;
   } catch (err) {

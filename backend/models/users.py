@@ -16,6 +16,7 @@ class UserInDB(UserBase):
     is_verified: bool = False
     google_id: Optional[str] = None
     rating: int = 500
+    highest_speed: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Token(BaseModel):
@@ -24,4 +25,5 @@ class Token(BaseModel):
 
 class UserProfile(UserBase):
     rating: int
+    highest_speed: int = 0
     is_verified: bool
