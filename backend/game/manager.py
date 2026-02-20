@@ -35,14 +35,18 @@ class ConnectionManager:
             is_bot_game = "bot" in room_id
 
             if num_ready >= 2 or (num_ready >= 1 and is_bot_game):
+                self.ready_players[room_id] = set()
                 paragraph = get_random_paragraph()
                 
-                # INITIALIZE REDIS GAME STATE
+                
+
+                await redis_client.delete(f"state:{room_id}")
                 game_state = {
                     "active": True,
                     "winner": None,
                     "timer": 60,
-                    "paragraph_len": len(paragraph)
+                    "paragraph_len": len(paragraph),
+                    "players": {}
                 }
                 await redis_client.setex(f"state:{room_id}", 3600, json.dumps(game_state))
 
@@ -130,12 +134,36 @@ class ConnectionManager:
             await self.end_game(room_id, "FINISHED", user_id, state["players"])
 
     async def end_game(self, room_id: str, reason: str, winner_id: str = None, final_stats: dict = None):
+        raw_state = await redis_client.get(f"state:{room_id}")
+        if raw_state:
+            state = json.loads(raw_state)
+            state["active"] = False
+            await redis_client.setex(f"state:{room_id}", 3600, json.dumps(state))
+        
         await self.broadcast_to_room(room_id, {
             "type": "GAME_OVER",
             "winner_id": winner_id,
             "reason": reason,
             "final_stats": final_stats
         })
+        
+    
+
+    async def handle_rematch(self, room_id: str, user_id: str):
+        # Add to ready set
+        if room_id not in self.ready_players:
+            self.ready_players[room_id] = set()
+        
+        self.ready_players[room_id].add(user_id)
+        
+        # Notify the OTHER player that someone wants a rematch
+        await self.broadcast_to_room(room_id, {
+            "type": "REMATCH_REQUESTED",
+            "user_id": user_id
+        })
+        
+        
+        await self.set_ready(room_id, user_id)
 
     async def broadcast_to_room(self, room_id: str, message: dict):
         if room_id in self.active_rooms:

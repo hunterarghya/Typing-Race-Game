@@ -32,6 +32,9 @@ async def game_websocket(websocket: WebSocket, room_id: str, token: str):
 
             if message.get("type") == "ready":
                 await manager.set_ready(room_id, user_id)
+
+            if message.get("type") == "rematch":
+                await manager.handle_rematch(room_id, user_id)
             
             
             if message.get("type") == "progress":

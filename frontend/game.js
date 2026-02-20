@@ -95,6 +95,12 @@ if (roomId) {
       }
 
       alert(resultMsg);
+
+      // ADD THIS: Show the rematch button
+      const rematchBtn = document.getElementById("rematch-btn");
+      rematchBtn.style.display = "block";
+      rematchBtn.innerText = "Play Again";
+      rematchBtn.disabled = false;
     }
 
     if (data.type === "PLAYER_READY") {
@@ -102,9 +108,32 @@ if (roomId) {
         "Opponent is ready! Click yours.";
     }
 
+    if (data.type === "REMATCH_REQUESTED") {
+      if (data.user_id !== userId) {
+        // Only show this to the player who HASN'T clicked yet
+        const btn = document.getElementById("rematch-btn");
+        btn.innerText = "Opponent wants a Rematch! Click to Accept";
+        btn.classList.add("pulse-animation"); // Optional: add a CSS class for effect
+      }
+    }
+
     if (data.type === "START_GAME") {
       targetText = data.paragraph;
+
+      // RESET LOCAL STATE
+      charIndex = 0;
+      mistakes = 0;
+      timeElapsed = 0;
+      timer = 60;
+
+      // RESET UI ELEMENTS
       document.getElementById("lobby-zone").style.display = "none";
+      document.getElementById("rematch-btn").style.display = "none"; // Hide button again
+      document.getElementById("my-bar").style.width = "0%";
+      document.getElementById("opponent-bar").style.width = "0%";
+      wpmDisplay.innerText = "0";
+      accuracyDisplay.innerText = "100";
+
       startCountdown();
     }
 
@@ -140,6 +169,17 @@ function startCountdown() {
       initGame();
       isTyping = true;
       timeElapsed = 0;
+
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            type: "progress",
+            charIndex: 0,
+            wpm: 0,
+            accuracy: 100,
+          }),
+        );
+      }
 
       const heartbeatId = setInterval(() => {
         if (!gameStarted) {
@@ -186,6 +226,10 @@ function updateOpponentUI(data) {
 
 function initGame() {
   textDisplay.innerHTML = "";
+  // Clear all previous opponent visual artifacts
+  const opponentBar = document.getElementById("opponent-bar");
+  opponentBar.style.width = "0%";
+
   targetText.split("").forEach((char) => {
     let span = document.createElement("span");
     span.innerText = char;
@@ -194,11 +238,13 @@ function initGame() {
   });
 
   const chars = textDisplay.querySelectorAll(".char");
+  // Clear any leftover ghost classes
+  chars.forEach((c) => c.classList.remove("opponent-ghost"));
+
   if (chars.length > 0) {
     chars[0].classList.add("current");
   }
 
-  // Force focus
   inputField.disabled = false;
   inputField.value = "";
   inputField.focus();
@@ -246,6 +292,15 @@ function updateStats() {
   let acc =
     totalAttempts > 0 ? Math.round((charIndex / totalAttempts) * 100) : 100;
   accuracyDisplay.innerText = acc;
+}
+
+function sendRematch() {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: "rematch" }));
+    const btn = document.getElementById("rematch-btn");
+    btn.disabled = true;
+    btn.innerText = "Waiting for opponent...";
+  }
 }
 
 document.addEventListener("click", () => {

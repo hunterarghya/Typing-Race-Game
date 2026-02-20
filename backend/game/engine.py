@@ -1,5 +1,7 @@
 import asyncio
+import json
 import random
+from backend.core.redis_client import redis_client
 
 async def spawn_bot(manager, room_id: str, target_wpm: int, paragraph: str):
     """
@@ -16,8 +18,15 @@ async def spawn_bot(manager, room_id: str, target_wpm: int, paragraph: str):
 
     current_idx = 0
     while current_idx < total_chars:
-        # Stop if the room was deleted (player left)
-        if room_id not in manager.active_rooms:
+        
+
+        # Check if the room still exists AND if the game is still active
+        raw_state = await redis_client.get(f"state:{room_id}")
+        if not raw_state:
+            break
+        
+        state = json.loads(raw_state)
+        if not state.get("active"): # STOP if game ended or was reset
             break
             
         current_idx += 1
