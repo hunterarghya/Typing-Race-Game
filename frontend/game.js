@@ -43,6 +43,60 @@ if (roomId) {
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
 
+    if (data.type === "TIMER_UPDATE") {
+      timer = data.time;
+      timerDisplay.innerText = data.time;
+      timeElapsed = 60 - data.time;
+      updateStats();
+    }
+
+    if (data.type === "GAME_OVER") {
+      if (!gameStarted) return;
+      gameStarted = false;
+      inputField.disabled = true;
+
+      const stats = data.final_stats || {};
+      const opponentId = Object.keys(stats).find((id) => id !== userId);
+
+      const myStats = stats[userId] || { wpm: 0, accuracy: 100, charIndex: 0 };
+      const oppStats = opponentId
+        ? stats[opponentId]
+        : { wpm: 0, accuracy: 100, charIndex: 0 };
+
+      const myProgress = Math.round(
+        (myStats.charIndex / targetText.length) * 100,
+      );
+      const oppProgress = Math.round(
+        (oppStats.charIndex / targetText.length) * 100,
+      );
+
+      wpmDisplay.innerText = myStats.wpm;
+      accuracyDisplay.innerText = myStats.accuracy;
+
+      if (opponentId) {
+        document.getElementById("opp-wpm").innerText = oppStats.wpm;
+        document.getElementById("opp-accuracy").innerText = oppStats.accuracy;
+      }
+
+      let resultMsg = "";
+      if (data.winner_id === userId) {
+        resultMsg = `YOU WON! 🏆\nYour Progress: ${myProgress}%\nYour WPM: ${myStats.wpm}`;
+      } else if (data.winner_id === null) {
+        resultMsg = `TIME UP! IT'S A TIE! 🤝\nBoth reached ${myProgress}%`;
+      } else {
+        const isBot = data.winner_id.includes("bot");
+        const winnerLabel = isBot ? "THE BOT" : "OPPONENT";
+
+        const reason =
+          data.reason === "FINISHED"
+            ? "Opponent finished first!"
+            : "Opponent was further ahead!";
+        resultMsg = `${winnerLabel} WON! 🏁\n${reason}\n${winnerLabel}: ${oppProgress}% vs Yours: ${myProgress}%`;
+      }
+
+      alert(resultMsg);
+    }
+
     if (data.type === "PLAYER_READY") {
       document.getElementById("lobby-status").innerText =
         "Opponent is ready! Click yours.";
@@ -85,7 +139,25 @@ function startCountdown() {
       inputField.disabled = false;
       initGame();
       isTyping = true;
-      startTimer();
+      timeElapsed = 0;
+
+      const heartbeatId = setInterval(() => {
+        if (!gameStarted) {
+          clearInterval(heartbeatId);
+          return;
+        }
+        updateStats();
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(
+            JSON.stringify({
+              type: "progress",
+              charIndex: charIndex,
+              wpm: wpmDisplay.innerText,
+              accuracy: accuracyDisplay.innerText,
+            }),
+          );
+        }
+      }, 1000);
     }
   }, 1000);
 }
@@ -142,27 +214,10 @@ inputField.addEventListener("input", (e) => {
   const lastTypedChar = e.target.value[e.target.value.length - 1];
 
   if (charIndex < chars.length) {
-    // if (!isTyping) {
-    //   isTyping = true;
-    //   startTimer();
-    // }
-
     if (lastTypedChar === chars[charIndex].innerText) {
       chars[charIndex].classList.add("correct");
       chars[charIndex].classList.remove("current", "incorrect");
       charIndex++;
-
-      // Send progress + current stats to opponent
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(
-          JSON.stringify({
-            type: "progress",
-            charIndex: charIndex,
-            wpm: wpmDisplay.innerText,
-            accuracy: accuracyDisplay.innerText,
-          }),
-        );
-      }
 
       if (charIndex < chars.length) {
         chars[charIndex].classList.add("current");
@@ -181,50 +236,18 @@ inputField.addEventListener("input", (e) => {
 });
 
 function updateStats() {
-  const timeInMins = timeElapsed / 60 || 1 / 60;
+  const effectiveTime = timeElapsed > 0 ? timeElapsed : 1;
+  const timeInMins = effectiveTime / 60;
+
   let wpm = Math.round(charIndex / 5 / timeInMins);
   wpmDisplay.innerText = wpm >= 0 ? wpm : 0;
+
   let totalAttempts = charIndex + mistakes;
   let acc =
     totalAttempts > 0 ? Math.round((charIndex / totalAttempts) * 100) : 100;
   accuracyDisplay.innerText = acc;
 }
 
-function startTimer() {
-  timer = 60;
-  timeElapsed = 0;
-  // Clear any existing interval before starting a new one
-  if (intervalId) clearInterval(intervalId);
-
-  intervalId = setInterval(() => {
-    if (timer > 0 && charIndex < targetText.length) {
-      timer--;
-      timeElapsed++;
-      timerDisplay.innerText = timer;
-      updateStats();
-    } else {
-      clearInterval(intervalId);
-      isTyping = false;
-      gameStarted = false; // Stop input
-      finishGame();
-    }
-  }, 1000);
-}
-
-function finishGame() {
-  gameStarted = false;
-  inputField.disabled = true;
-
-  // Logic to determine winner
-  const myWpm = parseInt(wpmDisplay.innerText);
-  const oppWpm = parseInt(document.getElementById("opp-wpm").innerText);
-  let resultMsg = myWpm > oppWpm ? "YOU WON! 🏆" : "OPPONENT WON! 🏁";
-  if (myWpm === oppWpm) resultMsg = "IT'S A TIE! 🤝";
-
-  alert(`${resultMsg}\nYour WPM: ${myWpm} | Opponent WPM: ${oppWpm}`);
-}
-
-// If the user clicks anywhere on the page, put the focus back on the hidden input
 document.addEventListener("click", () => {
   if (gameStarted && !inputField.disabled) {
     inputField.focus();

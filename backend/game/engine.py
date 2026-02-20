@@ -12,6 +12,7 @@ async def spawn_bot(manager, room_id: str, target_wpm: int, paragraph: str):
     # WPM to Delay: (60 seconds / (WPM * 5 characters per word))
     # At 60 WPM, this is 0.2s per character.
     delay_per_char = 60.0 / (target_wpm * 5)
+    bot_id = "bot_user"
 
     current_idx = 0
     while current_idx < total_chars:
@@ -20,11 +21,20 @@ async def spawn_bot(manager, room_id: str, target_wpm: int, paragraph: str):
             break
             
         current_idx += 1
+
+        # 1. Update the SERVER state so it knows who is actually ahead
+        await manager.update_progress(
+            room_id, 
+            bot_id, 
+            current_idx, 
+            target_wpm, 
+            100
+        )
         
         # Broadcast the bot's progress as if it's a real user
         await manager.broadcast_to_room(room_id, {
             "type": "opponent_progress",
-            "user_id": "bot_user", # Frontend recognizes this as 'not me'
+            "user_id": bot_id,
             "charIndex": current_idx,
             "wpm": target_wpm,
             "accuracy": 100

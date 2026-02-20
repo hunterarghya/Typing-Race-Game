@@ -1,33 +1,3 @@
-# import json
-# from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-# from backend.game.manager import manager
-
-# router = APIRouter()
-
-# @router.websocket("/ws/game/{room_id}/{user_id}")
-# async def game_websocket(websocket: WebSocket, room_id: str, user_id: str):
-#     # 1. Register the connection
-#     await manager.connect(websocket, room_id, user_id)
-    
-#     try:
-#         while True:
-#             # 2. Wait for messages from this specific player
-#             data = await websocket.receive_text()
-#             message = json.loads(data)
-            
-#             # 3. Handle progress updates
-#             if message.get("type") == "progress":
-#                 # Tell everyone in the room (including the sender) where this player is
-#                 await manager.broadcast_to_room(room_id, {
-#                     "type": "opponent_progress",
-#                     "user_id": user_id,
-#                     "charIndex": message["charIndex"]
-#                 })
-                
-#     except WebSocketDisconnect:
-#         # 4. Clean up on leave
-#         manager.disconnect(room_id, user_id)
-
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from jose import jwt, JWTError
@@ -63,7 +33,20 @@ async def game_websocket(websocket: WebSocket, room_id: str, token: str):
             if message.get("type") == "ready":
                 await manager.set_ready(room_id, user_id)
             
+            
             if message.get("type") == "progress":
+                # 1. Update the Manager (for winner/timer logic)
+                
+
+                await manager.update_progress(
+                    room_id, 
+                    user_id, 
+                    message["charIndex"], 
+                    message.get("wpm", 0), 
+                    message.get("accuracy", 100)
+                )
+                
+                # 2. Broadcast progress to the opponent (for UI bars)
                 await manager.broadcast_to_room(room_id, {
                     "type": "opponent_progress",
                     "user_id": user_id,

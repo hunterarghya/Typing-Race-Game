@@ -118,16 +118,7 @@ async def google_callback(request: Request):
             data={"sub": user_id, "email": user_info['email']}
         )
 
-        # 5. Return the token to the frontend
-        # Usually, redirect back to your frontend with the token in the URL or a cookie
-        # return {
-        #     "access_token": access_token, 
-        #     "token_type": "bearer",
-        #     "user": {
-        #         "email": user_info['email'],
-        #         "name": user_info.get('name')
-        #     }
-        # }
+        
         response = RedirectResponse(url=f"/static/dashboard.html?token={access_token}")
         return response
     except Exception as e:
