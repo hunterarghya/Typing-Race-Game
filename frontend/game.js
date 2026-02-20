@@ -56,8 +56,8 @@ if (roomId) {
       inputField.disabled = true;
 
       const stats = data.final_stats || {};
-      const opponentId = Object.keys(stats).find((id) => id !== userId);
 
+      const opponentId = Object.keys(stats).find((id) => id !== userId);
       const myStats = stats[userId] || { wpm: 0, accuracy: 100, charIndex: 0 };
       const oppStats = opponentId
         ? stats[opponentId]
@@ -96,7 +96,7 @@ if (roomId) {
 
       alert(resultMsg);
 
-      // ADD THIS: Show the rematch button
+      // Show the rematch button
       const rematchBtn = document.getElementById("rematch-btn");
       rematchBtn.style.display = "block";
       rematchBtn.innerText = "Play Again";
@@ -119,6 +119,17 @@ if (roomId) {
 
     if (data.type === "START_GAME") {
       targetText = data.paragraph;
+
+      // --- Update Names ---
+      const userMap = data.user_map || {};
+      // Find the opponent's ID (the one that isn't mine)
+      const opponentId = Object.keys(userMap).find((id) => id !== userId);
+
+      document.getElementById("my-name-label").innerText =
+        userMap[userId] || "You";
+      document.getElementById("opp-name-label").innerText =
+        userMap[opponentId] || "Opponent";
+      // -------------------------------
 
       // RESET LOCAL STATE
       charIndex = 0;

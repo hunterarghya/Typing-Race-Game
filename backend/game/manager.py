@@ -2,9 +2,11 @@ import json
 import asyncio
 from fastapi import WebSocket
 from backend.game.paragraphs import get_random_paragraph
+from backend.core.db import users_col
 from backend.game.engine import spawn_bot
 from backend.core.redis_client import redis_client
 from typing import Dict, Set
+from bson import ObjectId
 
 class ConnectionManager:
     def __init__(self):
@@ -41,6 +43,30 @@ class ConnectionManager:
                 
 
                 await redis_client.delete(f"state:{room_id}")
+
+                
+                # --- BUILD USER MAP WITH OBJECTID ---
+                user_map = {}
+                player_ids = list(self.active_rooms.get(room_id, {}).keys())
+                
+                for p_id in player_ids:
+                    try:
+                        # Convert the string ID from WebSocket/Redis back to a MongoDB ObjectId
+                        user_doc = await users_col.find_one({"_id": ObjectId(p_id)})
+                        
+                        if user_doc:
+                            # Use "username" or fallback to "name" or "Guest"
+                            user_map[p_id] = user_doc.get("username") or user_doc.get("name") or "Guest"
+                        else:
+                            user_map[p_id] = "Guest"
+                    except Exception as e:
+                        print(f"Error fetching username for {p_id}: {e}")
+                        user_map[p_id] = "Guest"
+                
+                if is_bot_game:
+                    user_map["bot_user"] = "Monkey 🐒"
+                # --------------------------------------------
+
                 game_state = {
                     "active": True,
                     "winner": None,
@@ -52,7 +78,8 @@ class ConnectionManager:
 
                 await self.broadcast_to_room(room_id, {
                     "type": "START_GAME",
-                    "paragraph": paragraph
+                    "paragraph": paragraph,
+                    "user_map": user_map
                 })
 
                 # START SERVER TIMER
