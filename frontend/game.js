@@ -43,6 +43,12 @@ if (roomId) {
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
 
+    if (data.type === "ERROR") {
+      alert(data.message);
+      window.location.href = "dashboard.html"; // Send them back
+      return;
+    }
+
     if (data.type === "TIMER_UPDATE") {
       timer = data.time;
       timerDisplay.innerText = data.time;
@@ -165,51 +171,98 @@ function sendReady() {
   }
 }
 
+// function startCountdown() {
+//   let count = 3;
+//   inputField.disabled = true;
+
+//   const countdownInterval = setInterval(() => {
+//     if (count > 0) {
+//       textDisplay.innerHTML = `<h1 class="countdown-text">${count}</h1>`;
+//       count--;
+//     } else {
+//       clearInterval(countdownInterval);
+//       gameStarted = true;
+//       inputField.disabled = false;
+//       initGame();
+//       isTyping = true;
+//       timeElapsed = 0;
+
+//       if (socket && socket.readyState === WebSocket.OPEN) {
+//         socket.send(
+//           JSON.stringify({
+//             type: "progress",
+//             charIndex: 0,
+//             wpm: 0,
+//             accuracy: 100,
+//           }),
+//         );
+//       }
+
+//       const heartbeatId = setInterval(() => {
+//         if (!gameStarted) {
+//           clearInterval(heartbeatId);
+//           return;
+//         }
+//         updateStats();
+//         if (socket && socket.readyState === WebSocket.OPEN) {
+//           socket.send(
+//             JSON.stringify({
+//               type: "progress",
+//               charIndex: charIndex,
+//               wpm: wpmDisplay.innerText,
+//               accuracy: accuracyDisplay.innerText,
+//             }),
+//           );
+//         }
+//       }, 1000);
+//     }
+//   }, 1000);
+// }
+
 function startCountdown() {
-  let count = 3;
   inputField.disabled = true;
 
-  const countdownInterval = setInterval(() => {
-    if (count > 0) {
-      textDisplay.innerHTML = `<h1 class="countdown-text">${count}</h1>`;
-      count--;
-    } else {
-      clearInterval(countdownInterval);
-      gameStarted = true;
-      inputField.disabled = false;
-      initGame();
-      isTyping = true;
-      timeElapsed = 0;
+  // 1. Show "GO!" immediately
+  textDisplay.innerHTML = `<h1 class="countdown-text" style="color: #4caf50;">GO!</h1>`;
 
+  // 2. Wait exactly 1 second (1000ms), then start everything
+  setTimeout(() => {
+    gameStarted = true;
+    inputField.disabled = false;
+    initGame();
+    isTyping = true;
+    timeElapsed = 0;
+
+    // Send initial progress to sync with server
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          type: "progress",
+          charIndex: 0,
+          wpm: 0,
+          accuracy: 100,
+        }),
+      );
+    }
+
+    // Start the stats heartbeat
+    const heartbeatId = setInterval(() => {
+      if (!gameStarted) {
+        clearInterval(heartbeatId);
+        return;
+      }
+      updateStats();
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(
           JSON.stringify({
             type: "progress",
-            charIndex: 0,
-            wpm: 0,
-            accuracy: 100,
+            charIndex: charIndex,
+            wpm: wpmDisplay.innerText,
+            accuracy: accuracyDisplay.innerText,
           }),
         );
       }
-
-      const heartbeatId = setInterval(() => {
-        if (!gameStarted) {
-          clearInterval(heartbeatId);
-          return;
-        }
-        updateStats();
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.send(
-            JSON.stringify({
-              type: "progress",
-              charIndex: charIndex,
-              wpm: wpmDisplay.innerText,
-              accuracy: accuracyDisplay.innerText,
-            }),
-          );
-        }
-      }, 1000);
-    }
+    }, 1000);
   }, 1000);
 }
 

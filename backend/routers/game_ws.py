@@ -23,7 +23,11 @@ async def game_websocket(websocket: WebSocket, room_id: str, token: str):
         return
 
     # 2. Register the connection using the verified user_id
-    await manager.connect(websocket, room_id, user_id)
+    # check if the connection was successful (room not full)
+    success = await manager.connect(websocket, room_id, user_id)
+
+    if not success:
+        return # Stop the function here; manager already closed the socket
     
     try:
         while True:

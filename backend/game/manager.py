@@ -16,12 +16,37 @@ class ConnectionManager:
         self.active_rooms: dict[str, dict[str, WebSocket]] = {}
         self.ready_players: Dict[str, Set[str]] = {}
 
+    # async def connect(self, websocket: WebSocket, room_id: str, user_id: str):
+    #     await websocket.accept()
+    #     if room_id not in self.active_rooms:
+    #         self.active_rooms[room_id] = {}
+    #         self.ready_players[room_id] = set()
+    #     self.active_rooms[room_id][user_id] = websocket
+
     async def connect(self, websocket: WebSocket, room_id: str, user_id: str):
-        await websocket.accept()
+        # 1. Initialize room if not exists
         if room_id not in self.active_rooms:
             self.active_rooms[room_id] = {}
             self.ready_players[room_id] = set()
+
+        # 2. Check if player is already in (allow reconnect) 
+        # OR if there is space for a new player (max 2)
+        current_players = self.active_rooms[room_id]
+        
+        if user_id not in current_players and len(current_players) >= 2:
+            # Room is full and this isn't a reconnecting player
+            await websocket.accept() 
+            await websocket.send_text(json.dumps({
+                "type": "ERROR",
+                "message": "This room is full. Maximum 2 players allowed."
+            }))
+            await websocket.close(code=1008) # Policy Violation
+            return False
+
+        # 3. If space available or it's a reconnect, accept and add to room
+        await websocket.accept()
         self.active_rooms[room_id][user_id] = websocket
+        return True
 
     def disconnect(self, room_id: str, user_id: str):
         if room_id in self.active_rooms:
