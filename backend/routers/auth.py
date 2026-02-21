@@ -195,3 +195,63 @@ async def google_callback(request: Request):
     except Exception as e:
         # raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
         return RedirectResponse(url="/static/index.html?error=google_auth_failed")
+
+
+
+# Add these new endpoints to auth.py
+
+@router.get("/public/profile/{username}")
+async def get_public_profile(username: str):
+    user = await users_col.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Calculate total games on the fly as requested
+    user_id = str(user["_id"])
+    total_games = await games_col.count_documents({"players.user_id": user_id})
+    
+    return {
+        "name": user.get("name"),
+        "username": user.get("username"),
+        "rating": user.get("rating", 500),
+        "highest_speed": user.get("highest_speed", 0),
+        "total_games": total_games
+    }
+
+@router.get("/public/history/{username}")
+async def get_public_history(username: str, page: int = 1, limit: int = 10):
+    user = await users_col.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_id = str(user["_id"])
+    skip = (page - 1) * limit
+    query = {"players.user_id": user_id}
+
+    total_games = await games_col.count_documents(query)
+    cursor = games_col.find(query).sort("created_at", -1).skip(skip).limit(limit)
+    games = await cursor.to_list(length=limit)
+    
+    history_data = []
+    for g in games:
+        # Note: 'me' here refers to the owner of the profile being viewed
+        me = next((p for p in g["players"] if p["user_id"] == user_id), None)
+        opponent = next((p for p in g["players"] if p["user_id"] != user_id), None)
+        
+        result = "TIE" if g.get("winner_id") is None else ("WON" if g["winner_id"] == user_id else "LOST")
+
+        history_data.append({
+            "my_wpm": me["wpm"] if me else 0,
+            "my_acc": me["accuracy"] if me else 0,
+            "opp_name": opponent["username"] if opponent else "Unknown",
+            "opp_wpm": opponent["wpm"] if opponent else 0,
+            "opp_acc": opponent["accuracy"] if opponent else 0,
+            "result": result,
+            "date": g["created_at"].strftime("%Y-%m-%d %H:%M")
+        })
+
+    return {
+        "total_games": total_games,
+        "history": history_data,
+        "total_pages": (total_games + limit - 1) // limit
+    }

@@ -33,6 +33,8 @@ function saveTokenAndRedirect(data) {
   }
 }
 
+let viewedUsername = null;
+
 async function handleResponse(response) {
   if (response.status === 401) {
     localStorage.removeItem("access_token");
@@ -144,81 +146,200 @@ async function handleResetPassword() {
 
 // --- PROFILE LOGIC ---
 
+// async function fetchProfile() {
+//   const token = localStorage.getItem("access_token");
+//   if (!token) return;
+
+//   try {
+//     const response = await fetch(`${API_URL}/auth/me`, {
+//       headers: { Authorization: `Bearer ${token}` },
+//     });
+
+//     const data = await handleResponse(response);
+
+//     document.getElementById("profile-details").innerHTML = `
+//             <p><strong>Name:</strong> ${data.name}</p>
+//             <p><strong>Username:</strong> ${data.username}</p>
+//             <p><strong>Email:</strong> ${data.email}</p>
+//             <p><strong>Rating:</strong> ${data.rating} 🏆</p>
+//             <p><strong>Highest Speed:</strong> ${data.highest_speed || 0} WPM ⚡</p>
+//             <p><strong>Verified:</strong> ${data.is_verified ? "✅" : "❌"}</p>
+//         `;
+//   } catch (err) {
+//     console.error("Profile load failed:", err);
+//   }
+//   fetchHistory();
+// }
+
 async function fetchProfile() {
   const token = localStorage.getItem("access_token");
   if (!token) return;
+
+  viewedUsername = null; // Reset to "self"
+  document.getElementById("game-controls").style.display = "block"; // Show game buttons
 
   try {
     const response = await fetch(`${API_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
     const data = await handleResponse(response);
 
     document.getElementById("profile-details").innerHTML = `
-            <p><strong>Name:</strong> ${data.name}</p>
-            <p><strong>Username:</strong> ${data.username}</p>
-            <p><strong>Email:</strong> ${data.email}</p>
-            <p><strong>Rating:</strong> ${data.rating} 🏆</p>
-            <p><strong>Highest Speed:</strong> ${data.highest_speed || 0} WPM ⚡</p>
-            <p><strong>Verified:</strong> ${data.is_verified ? "✅" : "❌"}</p>
-        `;
+      <p><strong>Name:</strong> ${data.name}</p>
+      <p><strong>Username:</strong> ${data.username} (You)</p>
+      <p><strong>Email:</strong> ${data.email}</p>
+      <p><strong>Rating:</strong> ${data.rating} 🏆</p>
+      <p><strong>Highest Speed:</strong> ${data.highest_speed || 0} WPM ⚡</p>
+    `;
+    fetchHistory(1); // Fetch own history
   } catch (err) {
     console.error("Profile load failed:", err);
   }
-  fetchHistory();
+}
+
+async function viewOtherProfile(username) {
+  if (
+    username === "Unknown" ||
+    username === "Monkey 🐒" ||
+    username === "Guest"
+  )
+    return;
+
+  viewedUsername = username;
+  document.getElementById("game-controls").style.display = "none"; // Hide game buttons for others
+
+  try {
+    const response = await fetch(`${API_URL}/auth/public/profile/${username}`);
+    const data = await handleResponse(response);
+
+    document.getElementById("profile-details").innerHTML = `
+      <button onclick="fetchProfile()" style="margin-bottom:10px;">⬅️ Back to My Profile</button>
+      <p><strong>Name:</strong> ${data.name}</p>
+      <p><strong>Username:</strong> ${data.username}</p>
+      <p><strong>Rating:</strong> ${data.rating} 🏆</p>
+      <p><strong>Highest Speed:</strong> ${data.highest_speed || 0} WPM ⚡</p>
+    `;
+    fetchHistory(1, username);
+  } catch (err) {
+    alert("Could not load profile: " + err.message);
+  }
 }
 
 let currentPage = 1;
 
-async function fetchHistory(page = 1) {
+// async function fetchHistory(page = 1) {
+//   const token = localStorage.getItem("access_token");
+//   currentPage = page;
+
+//   try {
+//     const response = await fetch(
+//       `${API_URL}/auth/history?page=${page}&limit=10`,
+//       {
+//         headers: { Authorization: `Bearer ${token}` },
+//       },
+//     );
+//     const data = await handleResponse(response);
+
+//     document.getElementById("total-games").innerText = data.total_games;
+
+//     const list = document.getElementById("history-list");
+//     list.innerHTML = "";
+
+//     data.history.forEach((game) => {
+//       const li = document.createElement("li");
+//       li.style.borderBottom = "1px solid #ccc";
+//       li.style.padding = "10px 0";
+
+//       // Apply a color based on result
+//       const resultColor =
+//         game.result === "WON"
+//           ? "green"
+//           : game.result === "LOST"
+//             ? "red"
+//             : "orange";
+
+//       li.innerHTML = `
+//                 <div style="display: flex; justify-content: space-between; align-items: center;">
+//                     <div style="flex: 1;">Me: <strong>${game.my_wpm}</strong> WPM (${game.my_acc}%)</div>
+//                     <div style="flex: 0.5; text-align: center; color: ${resultColor}; font-weight: bold;">${game.result}</div>
+//                     <div style="flex: 1; text-align: right;">${game.opp_name}: <strong>${game.opp_wpm}</strong> WPM (${game.opp_acc}%)</div>
+//                 </div>
+//                 <div style="font-size: 0.8em; color: gray; margin-top: 4px;">${game.date}</div>
+//             `;
+//       list.appendChild(li);
+//     });
+
+//     // Update Pagination Buttons (Logic added below)
+//     renderPaginationControls(data.total_pages);
+//   } catch (err) {
+//     console.error("History load failed:", err);
+//   }
+// }
+
+async function fetchHistory(page = 1, username = null) {
   const token = localStorage.getItem("access_token");
   currentPage = page;
 
   try {
-    const response = await fetch(
-      `${API_URL}/auth/history?page=${page}&limit=10`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    );
+    // If username is provided, use public endpoint, else use private "/history"
+    const url = username
+      ? `${API_URL}/auth/public/history/${username}?page=${page}&limit=10`
+      : `${API_URL}/auth/history?page=${page}&limit=10`;
+
+    const headers = username ? {} : { Authorization: `Bearer ${token}` };
+
+    const response = await fetch(url, { headers });
     const data = await handleResponse(response);
 
     document.getElementById("total-games").innerText = data.total_games;
-
     const list = document.getElementById("history-list");
     list.innerHTML = "";
 
     data.history.forEach((game) => {
-      const li = document.createElement("li");
-      li.style.borderBottom = "1px solid #ccc";
-      li.style.padding = "10px 0";
-
-      // Apply a color based on result
       const resultColor =
         game.result === "WON"
           ? "green"
           : game.result === "LOST"
             ? "red"
             : "orange";
+      const li = document.createElement("li");
+      li.style.borderBottom = "1px solid #ccc";
+      li.style.padding = "10px 0";
 
       li.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="flex: 1;">Me: <strong>${game.my_wpm}</strong> WPM (${game.my_acc}%)</div>
-                    <div style="flex: 0.5; text-align: center; color: ${resultColor}; font-weight: bold;">${game.result}</div>
-                    <div style="flex: 1; text-align: right;">${game.opp_name}: <strong>${game.opp_wpm}</strong> WPM (${game.opp_acc}%)</div>
-                </div>
-                <div style="font-size: 0.8em; color: gray; margin-top: 4px;">${game.date}</div>
-            `;
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1;">${username || "Me"}: <strong>${game.my_wpm}</strong> WPM</div>
+            <div style="flex: 0.5; text-align: center; color: ${resultColor}; font-weight: bold;">${game.result}</div>
+            <div style="flex: 1; text-align: right;">
+                <a href="javascript:void(0)" onclick="viewOtherProfile('${game.opp_name}')">${game.opp_name}</a>: 
+                <strong>${game.opp_wpm}</strong> WPM
+            </div>
+        </div>
+        <div style="font-size: 0.8em; color: gray; margin-top: 4px;">${game.date}</div>
+      `;
       list.appendChild(li);
     });
 
-    // Update Pagination Buttons (Logic added below)
     renderPaginationControls(data.total_pages);
   } catch (err) {
     console.error("History load failed:", err);
   }
 }
+
+// function renderPaginationControls(totalPages) {
+//   let controls = document.getElementById("pagination-controls");
+//   if (!controls) {
+//     controls = document.createElement("div");
+//     controls.id = "pagination-controls";
+//     document.getElementById("history-container").after(controls);
+//   }
+
+//   controls.innerHTML = `
+//         <button onclick="fetchHistory(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>Prev</button>
+//         <span> Page ${currentPage} of ${totalPages} </span>
+//         <button onclick="fetchHistory(${currentPage + 1})" ${currentPage >= totalPages ? "disabled" : ""}>Next</button>
+//     `;
+// }
 
 function renderPaginationControls(totalPages) {
   let controls = document.getElementById("pagination-controls");
@@ -228,11 +349,13 @@ function renderPaginationControls(totalPages) {
     document.getElementById("history-container").after(controls);
   }
 
+  // Pass current viewedUsername to the next/prev buttons
+  const userParam = viewedUsername ? `'${viewedUsername}'` : "null";
   controls.innerHTML = `
-        <button onclick="fetchHistory(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>Prev</button>
-        <span> Page ${currentPage} of ${totalPages} </span>
-        <button onclick="fetchHistory(${currentPage + 1})" ${currentPage >= totalPages ? "disabled" : ""}>Next</button>
-    `;
+    <button onclick="fetchHistory(${currentPage - 1}, ${userParam})" ${currentPage === 1 ? "disabled" : ""}>Prev</button>
+    <span> Page ${currentPage} of ${totalPages} </span>
+    <button onclick="fetchHistory(${currentPage + 1}, ${userParam})" ${currentPage >= totalPages ? "disabled" : ""}>Next</button>
+  `;
 }
 
 let pendingRedirectUrl = "";
