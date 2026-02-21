@@ -166,6 +166,73 @@ async function fetchProfile() {
   } catch (err) {
     console.error("Profile load failed:", err);
   }
+  fetchHistory();
+}
+
+let currentPage = 1;
+
+async function fetchHistory(page = 1) {
+  const token = localStorage.getItem("access_token");
+  currentPage = page;
+
+  try {
+    const response = await fetch(
+      `${API_URL}/auth/history?page=${page}&limit=10`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    const data = await handleResponse(response);
+
+    document.getElementById("total-games").innerText = data.total_games;
+
+    const list = document.getElementById("history-list");
+    list.innerHTML = "";
+
+    data.history.forEach((game) => {
+      const li = document.createElement("li");
+      li.style.borderBottom = "1px solid #ccc";
+      li.style.padding = "10px 0";
+
+      // Apply a color based on result
+      const resultColor =
+        game.result === "WON"
+          ? "green"
+          : game.result === "LOST"
+            ? "red"
+            : "orange";
+
+      li.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">Me: <strong>${game.my_wpm}</strong> WPM (${game.my_acc}%)</div>
+                    <div style="flex: 0.5; text-align: center; color: ${resultColor}; font-weight: bold;">${game.result}</div>
+                    <div style="flex: 1; text-align: right;">${game.opp_name}: <strong>${game.opp_wpm}</strong> WPM (${game.opp_acc}%)</div>
+                </div>
+                <div style="font-size: 0.8em; color: gray; margin-top: 4px;">${game.date}</div>
+            `;
+      list.appendChild(li);
+    });
+
+    // Update Pagination Buttons (Logic added below)
+    renderPaginationControls(data.total_pages);
+  } catch (err) {
+    console.error("History load failed:", err);
+  }
+}
+
+function renderPaginationControls(totalPages) {
+  let controls = document.getElementById("pagination-controls");
+  if (!controls) {
+    controls = document.createElement("div");
+    controls.id = "pagination-controls";
+    document.getElementById("history-container").after(controls);
+  }
+
+  controls.innerHTML = `
+        <button onclick="fetchHistory(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>Prev</button>
+        <span> Page ${currentPage} of ${totalPages} </span>
+        <button onclick="fetchHistory(${currentPage + 1})" ${currentPage >= totalPages ? "disabled" : ""}>Next</button>
+    `;
 }
 
 let pendingRedirectUrl = "";

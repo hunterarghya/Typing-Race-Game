@@ -6,7 +6,7 @@ from backend.auth.pwd_utils import hash_password, verify_password, create_access
 from backend.auth.otp_service import generate_otp, verify_otp
 from backend.auth.email_utils import send_otp_email
 from backend.auth.deps import get_current_user
-from backend.core.db import users_col
+from backend.core.db import users_col, games_col
 from backend.auth.oidc import oauth
 from backend.core.config import settings
 from datetime import datetime
@@ -102,6 +102,54 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
     #-------------------------------------------
     return current_user
     
+
+@router.get("/history")
+async def get_game_history(
+    page: int = 1, 
+    limit: int = 10, 
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = str(current_user["_id"])
+    skip = (page - 1) * limit
+
+    # Query: User must be in the players list
+    query = {"players.user_id": user_id}
+
+    # Get total count for frontend pagination controls
+    total_games = await games_col.count_documents(query)
+    
+    # Fetch only the specific page, sorted by newest first
+    cursor = games_col.find(query).sort("created_at", -1).skip(skip).limit(limit)
+    games = await cursor.to_list(length=limit)
+    
+    history_data = []
+    for g in games:
+        me = next((p for p in g["players"] if p["user_id"] == user_id), None)
+        opponent = next((p for p in g["players"] if p["user_id"] != user_id), None)
+        
+        # Tie Logic
+        if g.get("winner_id") is None:
+            result = "TIE"
+        else:
+            result = "WON" if g["winner_id"] == user_id else "LOST"
+
+        history_data.append({
+            "my_wpm": me["wpm"] if me else 0,
+            "my_acc": me["accuracy"] if me else 0,
+            "opp_name": opponent["username"] if opponent else "Unknown",
+            "opp_wpm": opponent["wpm"] if opponent else 0,
+            "opp_acc": opponent["accuracy"] if opponent else 0,
+            "result": result,
+            "date": g["created_at"].strftime("%Y-%m-%d %H:%M")
+        })
+
+    return {
+        "total_games": total_games,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total_games + limit - 1) // limit,
+        "history": history_data
+    }
 
 @router.get("/login/google")
 async def google_login(request: Request):

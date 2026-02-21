@@ -10,6 +10,27 @@
       <p>Loading profile...</p>
     </div>
 
+    <div id="stats-summary">
+      <p>
+        <strong>Total Multiplayer Games:</strong>
+        <span id="total-games">0</span>
+      </p>
+    </div>
+
+    <hr />
+    <h3>Game History (Multiplayer Only)</h3>
+    <div
+      id="history-container"
+      style="
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        padding: 10px;
+      "
+    >
+      <ul id="history-list" style="list-style: none; padding: 0"></ul>
+    </div>
+
     <hr />
     <h3>Start a Game</h3>
     <div id="game-controls">

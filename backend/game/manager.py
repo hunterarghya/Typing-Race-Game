@@ -2,7 +2,9 @@ import json
 import asyncio
 from fastapi import WebSocket
 from backend.game.paragraphs import get_random_paragraph
-from backend.core.db import users_col
+from backend.core.db import users_col, games_col
+from backend.models.game_record import GameRecord, PlayerStats
+from datetime import datetime
 from backend.game.engine import spawn_bot
 from backend.core.redis_client import redis_client
 from typing import Dict, Set
@@ -78,23 +80,7 @@ class ConnectionManager:
                     user_map["bot_user"] = "Monkey 🐒"
                 # ------------------------------
                 
-                # for p_id in player_ids:
-                #     try:
-                #         # Convert the string ID from WebSocket/Redis back to a MongoDB ObjectId
-                #         user_doc = await users_col.find_one({"_id": ObjectId(p_id)})
-                        
-                #         if user_doc:
-                #             # Use "username" or fallback to "name" or "Guest"
-                #             user_map[p_id] = user_doc.get("username") or user_doc.get("name") or "Guest"
-                #         else:
-                #             user_map[p_id] = "Guest"
-                #     except Exception as e:
-                #         print(f"Error fetching username for {p_id}: {e}")
-                #         user_map[p_id] = "Guest"
                 
-                # if is_bot_game:
-                #     user_map["bot_user"] = "Monkey 🐒"
-                # # --------------------------------------------
 
                 game_state = {
                     "active": True,
@@ -190,66 +176,101 @@ class ConnectionManager:
             await redis_client.setex(f"state:{room_id}", 3600, json.dumps(state))
             await self.end_game(room_id, "FINISHED", user_id, state["players"])
 
-    # async def end_game(self, room_id: str, reason: str, winner_id: str = None, final_stats: dict = None):
-    #     raw_state = await redis_client.get(f"state:{room_id}")
-    #     if raw_state:
-    #         state = json.loads(raw_state)
-    #         state["active"] = False
-    #         await redis_client.setex(f"state:{room_id}", 3600, json.dumps(state))
-        
-    #     await self.broadcast_to_room(room_id, {
-    #         "type": "GAME_OVER",
-    #         "winner_id": winner_id,
-    #         "reason": reason,
-    #         "final_stats": final_stats
-    #     })
-
+    
     async def end_game(self, room_id: str, reason: str, winner_id: str = None, final_stats: dict = None):
-        raw_state = await redis_client.get(f"state:{room_id}")
-        if not raw_state: return
-        
-        state = json.loads(raw_state)
-        state["active"] = False
-        await redis_client.setex(f"state:{room_id}", 3600, json.dumps(state))
+        # 1. Clean up Redis immediately so the next game starts fresh
+        await redis_client.delete(f"state:{room_id}")
 
-        # ---  UPDATE DATABASE ---
-        if final_stats:
-            is_bot_game = "bot" in room_id
+        if not final_stats:
+            # Still broadcast even if no stats (e.g., everyone disconnected)
+            await self.broadcast_to_room(room_id, {
+                "type": "GAME_OVER",
+                "winner_id": winner_id,
+                "reason": reason,
+                "final_stats": {}
+            })
+            return
+
+        is_bot_game = "bot" in room_id
+        players_list = []
+
+        # 2. Process Player Stats and History
+        for p_id, stats in final_stats.items():
+            #  Skip the bot key; it doesn't exist in the Users collection
+            if p_id == "bot_user":
+                continue
             
-            for p_id, stats in final_stats.items():
-                if p_id == "bot_user":
+            try:
+                # Validate ID format to prevent ObjectId() from crashing the whole loop
+                if not p_id or len(str(p_id)) != 24:
+                    print(f"Skipping invalid player ID: {p_id}")
                     continue
-                
-                try:
-                    # 1. Update Highest Speed (Always happens, even vs Bot)
-                    current_wpm = int(stats.get("wpm", 0))
-                    # await users_col.update_one(
-                    #     {"_id": ObjectId(p_id), "highest_speed": {"$lt": current_wpm}},
-                    #     {"$set": {"highest_speed": current_wpm}}
-                    # )
+
+                # Fetch username for the history record
+                user_doc = await users_col.find_one({"_id": ObjectId(p_id)})
+                uname = user_doc.get("username") or user_doc.get("name") or "Unknown"
+
+                # Update High Score
+                current_wpm = int(stats.get("wpm", 0))
+                await users_col.update_one(
+                    {"_id": ObjectId(p_id)},
+                    {"$max": {"highest_speed": current_wpm}}
+                )
+
+                # Update Rating (Multiplayer only)
+                if not is_bot_game and winner_id:
+                    change = 5 if p_id == winner_id else -5
                     await users_col.update_one(
                         {"_id": ObjectId(p_id)},
-                        {"$max": {"highest_speed": current_wpm}}
+                        {"$inc": {"rating": change}}
                     )
 
-                    # 2. Update Rating (Only if NOT a bot game)
-                    if not is_bot_game and winner_id:
-                        # If there is a winner and it's not a tie (None)
-                        change = 5 if p_id == winner_id else -5
-                        await users_col.update_one(
-                            {"_id": ObjectId(p_id)},
-                            {"$inc": {"rating": change}}
-                        )
-                except Exception as e:
-                    print(f"Failed to update stats for {p_id}: {e}")
-        # ----------------------------------
+                # Build the list for Game History
+                players_list.append(PlayerStats(
+                    user_id=p_id,
+                    username=uname,
+                    wpm=current_wpm,
+                    accuracy=stats.get("accuracy", 100)
+                ))
 
+            except Exception as e:
+                print(f"Error updating stats for player {p_id}: {e}")
+
+        # 3. Save to Game History Collection (Only if NOT a bot game and we have players)
+        if not is_bot_game and players_list:
+            try:
+                # Ensure all fields are standard Python types before Pydantic
+                record = GameRecord(
+                    room_id=str(room_id),
+                    mode="private",
+                    players=players_list,
+                    winner_id=str(winner_id) if winner_id else None,
+                    created_at=datetime.utcnow()
+                )
+                
+                # Use by_alias=True to handle the "_id" field correctly
+                game_dict = record.dict(by_alias=True)
+                
+                # Remove the 'id' field if it's None so MongoDB generates a fresh one
+                if game_dict.get("_id") is None:
+                    game_dict.pop("_id", None)
+
+                await games_col.insert_one(game_dict)
+                print(f"✅ Game saved successfully: {room_id}")
+            except Exception as e:
+                # This print will tell you exactly which field failed validation
+                print(f"❌ Failed to save game history: {e}")
+           
+
+        # 4. Final Broadcast to Frontend
         await self.broadcast_to_room(room_id, {
             "type": "GAME_OVER",
             "winner_id": winner_id,
             "reason": reason,
             "final_stats": final_stats
         })
+
+    
         
     
 
