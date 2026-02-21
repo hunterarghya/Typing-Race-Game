@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from backend.routers import auth, game_ws, game_ops
+from backend.routers import auth, game_ws, game_ops, social
 import os
 
 app = FastAPI(title="Typing Game API")
@@ -26,6 +26,7 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 app.include_router(auth.router)
 app.include_router(game_ops.router)
 app.include_router(game_ws.router)
+app.include_router(social.router)
 
 @app.get("/")
 async def root():

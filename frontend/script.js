@@ -399,6 +399,139 @@ function goToArena() {
   }
 }
 
+// --- SEARCH PLAYERS LOGIC ---
+
+// async function searchPlayers(page = 1) {
+//   const token = localStorage.getItem("access_token");
+//   const username = document.getElementById("search-username").value;
+//   const minWpm = document.getElementById("search-min-wpm").value;
+//   const maxWpm = document.getElementById("search-max-wpm").value;
+
+//   try {
+//     const response = await fetch(
+//       `${API_URL}/social/search?username=${username}&min_wpm=${minWpm}&max_wpm=${maxWpm}&page=${page}&limit=5`,
+//       { headers: { Authorization: `Bearer ${token}` } },
+//     );
+//     const data = await handleResponse(response);
+
+//     const list = document.getElementById("search-results-list");
+//     list.innerHTML = "";
+
+//     if (data.users.length === 0) {
+//       list.innerHTML = "<li>No players found.</li>";
+//     }
+
+//     data.users.forEach((user) => {
+//       const li = document.createElement("li");
+//       li.style.padding = "8px";
+//       li.style.borderBottom = "1px dashed #eee";
+//       li.innerHTML = `
+//                 <div style="display: flex; justify-content: space-between; align-items: center;">
+//                     <span>
+//                         <strong style="cursor:pointer; color: blue;" onclick="viewOtherProfile('${user.username}')">
+//                             ${user.username}
+//                         </strong>
+//                         <span style="font-size: 0.8em; color: #666;">(${user.highest_speed} WPM)</span>
+//                     </span>
+//                     <button onclick="openChat('${user.username}')" style="font-size: 0.7em;">Message</button>
+//                 </div>
+//             `;
+//       list.appendChild(li);
+//     });
+
+//     renderSearchPagination(data.total_pages, data.current_page);
+//   } catch (err) {
+//     console.error("Search failed:", err);
+//   }
+// }
+
+async function searchPlayers(page = 1) {
+  const token = localStorage.getItem("access_token");
+
+  // Get values and provide defaults if they are empty
+  const usernameInput = document.getElementById("search-username").value.trim();
+  const minWpmInput = document.getElementById("search-min-wpm").value;
+  const maxWpmInput = document.getElementById("search-max-wpm").value;
+
+  const minWpm = minWpmInput === "" ? 0 : parseInt(minWpmInput);
+  const maxWpm = maxWpmInput === "" ? 250 : parseInt(maxWpmInput);
+
+  try {
+    // Construct URL with sanitized values
+    const url = new URL(`${API_URL}/social/search`);
+    url.searchParams.append("page", page);
+    url.searchParams.append("limit", 5);
+    url.searchParams.append("min_wpm", minWpm);
+    url.searchParams.append("max_wpm", maxWpm);
+    if (usernameInput) url.searchParams.append("username", usernameInput);
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await handleResponse(response);
+
+    const list = document.getElementById("search-results-list");
+    list.innerHTML = "";
+
+    if (!data.users || data.users.length === 0) {
+      list.innerHTML =
+        "<li style='color: gray; padding: 10px;'>No other players found matching these filters.</li>";
+      renderSearchPagination(1, 1);
+      return;
+    }
+
+    data.users.forEach((user) => {
+      const li = document.createElement("li");
+      li.style.padding = "10px";
+      li.style.borderBottom = "1px solid #eee";
+      li.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>
+                        <strong style="cursor:pointer; color: #007bff;" onclick="viewOtherProfile('${user.username}')">
+                            ${user.username}
+                        </strong> 
+                        <br>
+                        <small style="color: #666;">Speed: ${user.highest_speed} WPM | Rating: ${user.rating}</small>
+                    </span>
+                    <button onclick="openChat('${user.username}')" style="padding: 5px 10px;">Message</button>
+                </div>
+            `;
+      list.appendChild(li);
+    });
+
+    renderSearchPagination(data.total_pages, data.current_page);
+  } catch (err) {
+    console.error("Search failed:", err);
+    alert("Search failed: " + err.message);
+  }
+}
+
+function renderSearchPagination(totalPages, currentPage) {
+  const container = document.getElementById("search-pagination");
+  if (totalPages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+        <div style="margin-top: 10px; font-size: 0.8em;">
+            <button onclick="searchPlayers(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>Prev</button>
+            <span> ${currentPage} / ${totalPages} </span>
+            <button onclick="searchPlayers(${currentPage + 1})" ${currentPage === totalPages ? "disabled" : ""}>Next</button>
+        </div>
+    `;
+}
+
+// Placeholder for the next phase
+function openChat(username) {
+  alert(
+    "Chat feature coming soon! You can view " +
+      username +
+      "'s profile by clicking their name.",
+  );
+}
+
 function handleLogout() {
   localStorage.removeItem("access_token");
   window.location.href = "index.html";

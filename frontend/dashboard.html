@@ -53,6 +53,45 @@
     </div>
 
     <br />
+
+    <hr />
+    <div id="player-search-section">
+      <h3>Find Players</h3>
+      <div style="margin-bottom: 10px">
+        <input
+          type="text"
+          id="search-username"
+          placeholder="Search username..."
+        />
+        <label>WPM: </label>
+        <input
+          type="number"
+          id="search-min-wpm"
+          placeholder="Min"
+          style="width: 50px"
+          value="0"
+        />
+        <input
+          type="number"
+          id="search-max-wpm"
+          placeholder="Max"
+          style="width: 50px"
+          value="200"
+        />
+        <button onclick="searchPlayers(1)">Search</button>
+      </div>
+
+      <div
+        id="search-results-container"
+        style="border: 1px solid #ddd; padding: 10px; min-height: 50px"
+      >
+        <ul id="search-results-list" style="list-style: none; padding: 0">
+          <p style="color: gray">Search for players to challenge them!</p>
+        </ul>
+        <div id="search-pagination"></div>
+      </div>
+    </div>
+    <br />
     <button onclick="handleLogout()">Logout</button>
 
     <!-- <script src="script.js"></script>
