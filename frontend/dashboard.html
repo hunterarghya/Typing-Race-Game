@@ -92,6 +92,57 @@
       </div>
     </div>
     <br />
+    <button
+      id="chat-toggle-btn"
+      onclick="toggleChat()"
+      style="position: relative"
+    >
+      💬
+      <div
+        id="chat-badge"
+        style="
+          display: none;
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          background: red;
+          color: white;
+          border-radius: 50%;
+          width: 18px;
+          height: 18px;
+          font-size: 12px;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        0
+      </div>
+    </button>
+
+    <div id="chat-widget">
+      <div id="chat-header">
+        <span id="chat-title" onclick="loadInbox()" style="cursor: pointer"
+          >Chats</span
+        >
+        <button
+          onclick="toggleChat()"
+          style="background: none; border: none; color: white; cursor: pointer"
+        >
+          ✖
+        </button>
+      </div>
+      <div id="chat-body" style="display: flex; flex-direction: column"></div>
+      <div id="chat-footer" style="display: none">
+        <input
+          type="text"
+          id="chat-input"
+          placeholder="Type a message..."
+          onkeypress="handleChatKey(event)"
+        />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+    <br />
     <button onclick="handleLogout()">Logout</button>
 
     <!-- <script src="script.js"></script>
@@ -107,6 +158,7 @@
       window.onload = function () {
         if (localStorage.getItem("access_token")) {
           fetchProfile();
+          startNotificationPolling();
         } else {
           window.location.href = "index.html";
         }

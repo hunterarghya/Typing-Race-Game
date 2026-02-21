@@ -198,7 +198,6 @@ async def google_callback(request: Request):
 
 
 
-# Add these new endpoints to auth.py
 
 @router.get("/public/profile/{username}")
 async def get_public_profile(username: str):
@@ -206,7 +205,7 @@ async def get_public_profile(username: str):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Calculate total games on the fly as requested
+    # Calculate total games on the fly
     user_id = str(user["_id"])
     total_games = await games_col.count_documents({"players.user_id": user_id})
     

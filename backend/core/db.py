@@ -7,3 +7,4 @@ db = client[settings.MONGO_DB]
 # Collections
 users_col = db["users"]
 games_col = db["games"]
+messages_col = db["messages"]

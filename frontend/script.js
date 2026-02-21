@@ -146,31 +146,6 @@ async function handleResetPassword() {
 
 // --- PROFILE LOGIC ---
 
-// async function fetchProfile() {
-//   const token = localStorage.getItem("access_token");
-//   if (!token) return;
-
-//   try {
-//     const response = await fetch(`${API_URL}/auth/me`, {
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-
-//     const data = await handleResponse(response);
-
-//     document.getElementById("profile-details").innerHTML = `
-//             <p><strong>Name:</strong> ${data.name}</p>
-//             <p><strong>Username:</strong> ${data.username}</p>
-//             <p><strong>Email:</strong> ${data.email}</p>
-//             <p><strong>Rating:</strong> ${data.rating} 🏆</p>
-//             <p><strong>Highest Speed:</strong> ${data.highest_speed || 0} WPM ⚡</p>
-//             <p><strong>Verified:</strong> ${data.is_verified ? "✅" : "❌"}</p>
-//         `;
-//   } catch (err) {
-//     console.error("Profile load failed:", err);
-//   }
-//   fetchHistory();
-// }
-
 async function fetchProfile() {
   const token = localStorage.getItem("access_token");
   if (!token) return;
@@ -214,6 +189,9 @@ async function viewOtherProfile(username) {
 
     document.getElementById("profile-details").innerHTML = `
       <button onclick="fetchProfile()" style="margin-bottom:10px;">⬅️ Back to My Profile</button>
+      <button onclick="openChatFromProfile('${data.username}')" style="margin-left: 10px; background-color: #007bff; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer;">
+          💬 Message
+        </button>
       <p><strong>Name:</strong> ${data.name}</p>
       <p><strong>Username:</strong> ${data.username}</p>
       <p><strong>Rating:</strong> ${data.rating} 🏆</p>
@@ -226,55 +204,6 @@ async function viewOtherProfile(username) {
 }
 
 let currentPage = 1;
-
-// async function fetchHistory(page = 1) {
-//   const token = localStorage.getItem("access_token");
-//   currentPage = page;
-
-//   try {
-//     const response = await fetch(
-//       `${API_URL}/auth/history?page=${page}&limit=10`,
-//       {
-//         headers: { Authorization: `Bearer ${token}` },
-//       },
-//     );
-//     const data = await handleResponse(response);
-
-//     document.getElementById("total-games").innerText = data.total_games;
-
-//     const list = document.getElementById("history-list");
-//     list.innerHTML = "";
-
-//     data.history.forEach((game) => {
-//       const li = document.createElement("li");
-//       li.style.borderBottom = "1px solid #ccc";
-//       li.style.padding = "10px 0";
-
-//       // Apply a color based on result
-//       const resultColor =
-//         game.result === "WON"
-//           ? "green"
-//           : game.result === "LOST"
-//             ? "red"
-//             : "orange";
-
-//       li.innerHTML = `
-//                 <div style="display: flex; justify-content: space-between; align-items: center;">
-//                     <div style="flex: 1;">Me: <strong>${game.my_wpm}</strong> WPM (${game.my_acc}%)</div>
-//                     <div style="flex: 0.5; text-align: center; color: ${resultColor}; font-weight: bold;">${game.result}</div>
-//                     <div style="flex: 1; text-align: right;">${game.opp_name}: <strong>${game.opp_wpm}</strong> WPM (${game.opp_acc}%)</div>
-//                 </div>
-//                 <div style="font-size: 0.8em; color: gray; margin-top: 4px;">${game.date}</div>
-//             `;
-//       list.appendChild(li);
-//     });
-
-//     // Update Pagination Buttons (Logic added below)
-//     renderPaginationControls(data.total_pages);
-//   } catch (err) {
-//     console.error("History load failed:", err);
-//   }
-// }
 
 async function fetchHistory(page = 1, username = null) {
   const token = localStorage.getItem("access_token");
@@ -325,21 +254,6 @@ async function fetchHistory(page = 1, username = null) {
     console.error("History load failed:", err);
   }
 }
-
-// function renderPaginationControls(totalPages) {
-//   let controls = document.getElementById("pagination-controls");
-//   if (!controls) {
-//     controls = document.createElement("div");
-//     controls.id = "pagination-controls";
-//     document.getElementById("history-container").after(controls);
-//   }
-
-//   controls.innerHTML = `
-//         <button onclick="fetchHistory(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>Prev</button>
-//         <span> Page ${currentPage} of ${totalPages} </span>
-//         <button onclick="fetchHistory(${currentPage + 1})" ${currentPage >= totalPages ? "disabled" : ""}>Next</button>
-//     `;
-// }
 
 function renderPaginationControls(totalPages) {
   let controls = document.getElementById("pagination-controls");
@@ -400,50 +314,6 @@ function goToArena() {
 }
 
 // --- SEARCH PLAYERS LOGIC ---
-
-// async function searchPlayers(page = 1) {
-//   const token = localStorage.getItem("access_token");
-//   const username = document.getElementById("search-username").value;
-//   const minWpm = document.getElementById("search-min-wpm").value;
-//   const maxWpm = document.getElementById("search-max-wpm").value;
-
-//   try {
-//     const response = await fetch(
-//       `${API_URL}/social/search?username=${username}&min_wpm=${minWpm}&max_wpm=${maxWpm}&page=${page}&limit=5`,
-//       { headers: { Authorization: `Bearer ${token}` } },
-//     );
-//     const data = await handleResponse(response);
-
-//     const list = document.getElementById("search-results-list");
-//     list.innerHTML = "";
-
-//     if (data.users.length === 0) {
-//       list.innerHTML = "<li>No players found.</li>";
-//     }
-
-//     data.users.forEach((user) => {
-//       const li = document.createElement("li");
-//       li.style.padding = "8px";
-//       li.style.borderBottom = "1px dashed #eee";
-//       li.innerHTML = `
-//                 <div style="display: flex; justify-content: space-between; align-items: center;">
-//                     <span>
-//                         <strong style="cursor:pointer; color: blue;" onclick="viewOtherProfile('${user.username}')">
-//                             ${user.username}
-//                         </strong>
-//                         <span style="font-size: 0.8em; color: #666;">(${user.highest_speed} WPM)</span>
-//                     </span>
-//                     <button onclick="openChat('${user.username}')" style="font-size: 0.7em;">Message</button>
-//                 </div>
-//             `;
-//       list.appendChild(li);
-//     });
-
-//     renderSearchPagination(data.total_pages, data.current_page);
-//   } catch (err) {
-//     console.error("Search failed:", err);
-//   }
-// }
 
 async function searchPlayers(page = 1) {
   const token = localStorage.getItem("access_token");
@@ -523,16 +393,146 @@ function renderSearchPagination(totalPages, currentPage) {
     `;
 }
 
-// Placeholder for the next phase
-function openChat(username) {
-  alert(
-    "Chat feature coming soon! You can view " +
-      username +
-      "'s profile by clicking their name.",
+function openChatFromProfile(username) {
+  const widget = document.getElementById("chat-widget");
+  widget.style.display = "flex";
+  openChat(username);
+}
+
+let activeChatUser = null;
+
+function toggleChat() {
+  const widget = document.getElementById("chat-widget");
+  widget.style.display =
+    widget.style.display === "none" || widget.style.display === ""
+      ? "flex"
+      : "none";
+  if (widget.style.display === "flex") loadInbox();
+}
+
+async function loadInbox() {
+  activeChatUser = null;
+  document.getElementById("chat-title").innerText = "Recent Chats";
+  document.getElementById("chat-footer").style.display = "none";
+  const body = document.getElementById("chat-body");
+  body.innerHTML = "Loading...";
+
+  const response = await fetch(`${API_URL}/chat/inbox`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+    },
+  });
+  const chats = await response.json();
+
+  body.innerHTML = chats.length
+    ? ""
+    : "<p style='text-align:center; color:gray;'>No messages yet.</p>";
+  chats.forEach((c) => {
+    const div = document.createElement("div");
+    div.style =
+      "padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;";
+    div.onclick = () => openChat(c.username);
+    div.innerHTML = `<strong>${c.username}</strong><br><small>${c.last_msg.substring(0, 20)}...</small>`;
+    body.appendChild(div);
+  });
+}
+
+async function openChat(username) {
+  activeChatUser = username;
+  document.getElementById("chat-title").innerText = "⬅ " + username;
+  document.getElementById("chat-footer").style.display = "flex";
+  const body = document.getElementById("chat-body");
+
+  // --- Tell the backend these messages are now read ---
+  try {
+    fetch(`${API_URL}/chat/mark-read/${username}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      },
+    });
+  } catch (e) {
+    console.error("Error marking messages as read", e);
+  }
+  // ---------------------------------------------------------
+
+  body.innerHTML = "Loading history...";
+
+  const response = await fetch(`${API_URL}/chat/history/${username}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+    },
+  });
+  const messages = await response.json();
+
+  body.innerHTML = "";
+  messages.forEach((m) => {
+    const div = document.createElement("div");
+    div.className = `msg ${m.is_me ? "me" : "them"}`;
+    div.innerText = m.text;
+    body.appendChild(div);
+  });
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendMessage() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+  if (!text || !activeChatUser) return;
+
+  await fetch(
+    `${API_URL}/chat/send?receiver_username=${activeChatUser}&text=${encodeURIComponent(text)}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      },
+    },
   );
+  input.value = "";
+  openChat(activeChatUser); // Refresh history
+}
+
+function handleChatKey(e) {
+  if (e.key === "Enter") sendMessage();
 }
 
 function handleLogout() {
   localStorage.removeItem("access_token");
   window.location.href = "index.html";
+}
+
+let lastKnownUnreadCount = 0;
+
+async function startNotificationPolling() {
+  setInterval(async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token || !isDashboard) return;
+
+    try {
+      const response = await fetch(`${API_URL}/chat/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+
+      const badge = document.getElementById("chat-badge");
+      if (data.unread_count > 0) {
+        badge.style.display = "flex";
+        badge.innerText = data.unread_count;
+
+        // If count increased, play sound and refresh active chat
+        if (data.unread_count > lastKnownUnreadCount) {
+          new Audio(
+            "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3",
+          ).play();
+          if (activeChatUser) openChat(activeChatUser);
+        }
+      } else {
+        badge.style.display = "none";
+      }
+      lastKnownUnreadCount = data.unread_count;
+    } catch (e) {
+      console.log("Polling error");
+    }
+  }, 4000);
 }
