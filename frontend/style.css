@@ -1,185 +1,561 @@
 :root {
-  --bg-color: #0f172a;
-  --text-grey: #64748b;
-  --correct-green: #22c55e;
-  --wrong-red: #ef4444;
-  --accent-blue: #3b82f6;
+  --blood-red: #8b0000;
+  --bright-red: #ff3131;
+  --dim-red: #5c0000;
+  --pitch-black: #050505;
+  --metallic-red: #2a0000;
+  --glass-black: rgba(0, 0, 0, 0.85);
+  --border-red: rgba(139, 0, 0, 0.4);
+  --win-green: #00ff41;
+  --tie-orange: #ffaa00;
 }
 
-body.arena-body {
-  background-color: var(--bg-color);
-  color: white;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+body.dashboard-body {
+  background: radial-gradient(
+    circle at center,
+    var(--metallic-red) 0%,
+    var(--pitch-black) 100%
+  );
+  color: var(--blood-red);
+  font-family: "Roboto Mono", monospace;
   margin: 0;
+  overflow-x: hidden;
 }
 
-.arena-wrapper {
-  width: 80%;
-  max-width: 900px;
-}
-
-#game-stats {
+/* Top Navigation */
+.top-nav {
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 30px;
+  justify-content: space-between;
+  padding: 20px 40px;
+  align-items: center;
 }
 
-.stat-card {
-  background: #1e293b;
-  padding: 15px 25px;
-  border-radius: 8px;
-  font-size: 1.2rem;
+.logo {
+  font-size: 2rem;
+  color: var(--blood-red);
   font-weight: bold;
-  border-bottom: 3px solid var(--accent-blue);
 }
 
-#arena-main {
-  background: #1e293b;
-  padding: 40px;
-  border-radius: 12px;
-  position: relative;
-  min-height: 200px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+.nav-controls button {
+  background: transparent;
+  border: 1px solid var(--blood-red);
+  color: var(--blood-red);
+  padding: 5px 15px;
+  margin-left: 10px;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
-#text-display {
-  font-size: 24px;
-  line-height: 1.6;
-  letter-spacing: 1px;
-  color: var(--text-grey);
-  word-break: break-word;
-  white-space: pre-wrap;
+.nav-controls button:hover {
+  background: var(--blood-red);
+  color: black;
 }
 
-/* Character States */
-.char {
-  position: relative;
-}
-.char.correct {
-  color: var(--correct-green);
-}
-.char.incorrect {
-  color: var(--wrong-red);
-  background: rgba(239, 68, 68, 0.2);
-}
-.char.current {
-  border-left: 2px solid white;
-  animation: blink 1s infinite;
+/* Layout Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Changed from 1fr 2fr to make them equal */
+  gap: 30px;
+  padding: 20px 40px;
+  height: 85vh;
 }
 
-@keyframes blink {
-  50% {
-    border-color: transparent;
-  }
+.column-right {
+  display: flex;
+  flex-direction: column;
+  gap: 30px; /* Keeps the spacing consistent between the two cards */
+  height: 100%;
 }
 
-/* Opponent Progress */
-.progress-container {
-  width: 100%;
-  height: 10px;
-  background: #334155;
-  border-radius: 5px;
-  margin-top: 10px;
+.column-right .hacker-card {
+  flex: 1; /* Ensures both cards on the right take up equal height */
   overflow: hidden;
 }
 
-.bar {
-  width: 0%;
-  height: 100%;
-  background: white;
-  box-shadow: 0 0 10px white;
-  transition: width 0.3s ease;
-}
-
-#keyboard-handler {
-  opacity: 0;
-  position: absolute;
-  z-index: -1;
-}
-
-.char.opponent-ghost {
-  background-color: rgba(0, 255, 0, 0.2); /* Light green highlight */
-  border-bottom: 2px solid green;
-}
-
-/* Chat Widget Styles */
-#chat-widget {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 320px;
-  height: 450px;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 10px 10px 0 0;
-  display: none;
+/* Hacker Cards */
+.hacker-card {
+  background: var(--glass-black);
+  border: 1px solid var(--border-red);
+  border-radius: 4px;
+  display: flex;
   flex-direction: column;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  color: #334155;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
 }
-#chat-header {
-  background: #0f172a;
-  color: white;
-  padding: 10px;
-  border-radius: 10px 10px 0 0;
+
+.card-header {
+  background: rgba(139, 0, 0, 0.1);
+  padding: 8px 15px;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--border-red);
   display: flex;
   justify-content: space-between;
 }
+
+.card-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Profile Specifics */
+.profile-name {
+  color: var(--bright-red);
+  font-size: 1.8rem;
+  margin: 0;
+}
+.profile-sub {
+  color: var(--blood-red);
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  margin: 20px 0;
+  border-top: 1px solid var(--border-red);
+  border-bottom: 1px solid var(--border-red);
+  padding: 15px 0;
+}
+
+.stat-item span {
+  display: block;
+  color: var(--bright-red);
+  font-size: 1.2rem;
+}
+.stat-item label {
+  font-size: 0.7rem;
+  color: var(--blood-red);
+}
+
+/* Game History */
+.history-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.history-item {
+  padding: 10px;
+  border-bottom: 1px solid rgba(139, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+}
+
+.history-item .WON {
+  color: var(--win-green);
+}
+.history-item .LOST {
+  color: var(--bright-red);
+}
+.history-item .TIE {
+  color: var(--tie-orange);
+}
+
+/* Chat Overlay */
+.glass-modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  border-left: 1px solid var(--blood-red);
+  display: none;
+  z-index: 2000;
+  flex-direction: column;
+}
+
 #chat-body {
   flex: 1;
   overflow-y: auto;
-  padding: 10px;
-  background: #f8fafc;
-}
-#chat-footer {
-  padding: 10px;
-  border-top: 1px solid #eee;
+  padding: 20px;
   display: flex;
-}
-#chat-input {
-  flex: 1;
-  padding: 5px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  flex-direction: column;
 }
 
 .msg {
-  margin-bottom: 10px;
-  padding: 8px 12px;
-  border-radius: 15px;
+  margin: 5px 0;
   max-width: 80%;
-  font-size: 0.9em;
+  padding: 8px;
+  font-size: 0.9rem;
 }
 .msg.me {
-  background: #3b82f6;
-  color: white;
   align-self: flex-end;
-  margin-left: auto;
-  border-bottom-right-radius: 2px;
+  color: var(--bright-red);
+  text-align: right;
 }
 .msg.them {
-  background: #e2e8f0;
-  color: #1e293b;
   align-self: flex-start;
-  border-bottom-left-radius: 2px;
+  color: var(--blood-red);
 }
 
-#chat-toggle-btn {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #3b82f6;
-  color: white;
+/* Mobile-like input for chat */
+#chat-footer {
+  padding: 20px;
+  border-top: 1px solid var(--border-red);
+  display: flex;
+}
+
+#chat-input {
+  background: transparent;
   border: none;
+  border-bottom: 1px solid var(--blood-red);
+  color: var(--bright-red);
+  flex: 1;
+  outline: none;
+}
+
+/* Buttons */
+button {
+  background: transparent;
+  border: 1px solid var(--blood-red);
+  color: var(--blood-red);
+  font-family: "Roboto Mono", monospace;
   cursor: pointer;
-  font-size: 24px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+button:hover {
+  background: var(--blood-red);
+  color: black;
+}
+
+/* --- Game Controls Redesign --- */
+
+/* Stack buttons vertically and make them bright red */
+#game-controls .button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+#game-controls .glitch-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  color: var(--bright-red);
+  border: 1px solid var(--bright-red);
+  background: rgba(255, 49, 49, 0.05);
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+#game-controls .glitch-btn:hover {
+  background: var(--bright-red);
+  color: black;
+  box-shadow: 0 0 10px rgba(255, 49, 49, 0.4);
+}
+
+/* URL Input Styling (No white background) */
+.terminal-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-red);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 15px;
+}
+
+#invite-link {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--bright-red);
+  font-family: "Roboto Mono", monospace;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: default;
+}
+
+/* Copy Button Styling */
+.copy-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--blood-red);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 0 0 10px;
+  transition: color 0.2s;
+}
+
+.copy-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.copy-icon-btn:hover {
+  color: var(--bright-red);
+  background: transparent;
+}
+
+/* Join Room Button - Red Theme */
+.join-btn {
+  width: 100%;
+  padding: 12px; /* Matched padding to glitch-btn */
+  border: 1px solid var(--bright-red);
+  color: var(--bright-red);
+  background: rgba(255, 49, 49, 0.05);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 10px; /* Space between URL bar and button */
+  transition: all 0.3s ease;
+}
+
+.join-btn:hover {
+  background: var(--bright-red);
+  color: black;
+  box-shadow: 0 0 10px rgba(255, 49, 49, 0.4);
+}
+
+/* --- Find Players Section: Terminal Aesthetic --- */
+
+.search-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Added spacing between rows of inputs/buttons */
+}
+
+/* Terminal Style Inputs (Matching the URL bar) */
+.search-bar input {
+  background: rgba(0, 0, 0, 0.3); /* Dark background like URL bar */
+  border: 1px solid var(--border-red);
+  color: var(--bright-red);
+  padding: 10px 12px;
+  font-family: "Roboto Mono", monospace;
+  outline: none;
+  border-radius: 4px;
+}
+
+/* Ensure the range inputs (min/max) have spacing between them */
+.range-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.range-inputs input {
+  flex: 1; /* Makes min and max boxes equal width */
+}
+
+/* Update Execute Search to Maroon (Blood Red) */
+.search-bar button {
+  width: 100%;
+  padding: 12px;
+  color: var(--blood-red); /* Changed from bright-red to maroon */
+  border: 1px solid var(--blood-red); /* Changed from bright-red to maroon */
+  background: rgba(139, 0, 0, 0.05); /* Dim maroon background */
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-bar button:hover {
+  background: var(--blood-red);
+  color: black;
+  box-shadow: 0 0 10px rgba(139, 0, 0, 0.4); /* Maroon glow */
+}
+
+/* --- Player List Results Styling --- */
+
+#search-results-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0 0;
+}
+
+.search-result-item {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--dim-red); /* Dark red divider instead of white */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Player Name */
+.player-info h4 {
+  margin: 0;
+  color: var(--bright-red); /* Matches profile name red */
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* Speed and Rating Stats */
+.player-info p {
+  margin: 5px 0 0 0;
+  font-size: 0.85rem;
+  color: var(--blood-red); /* Matches general text color */
+}
+
+/* Message Button in Search List */
+.msg-btn-search {
+  padding: 6px 15px;
+  font-size: 0.8rem;
+  color: var(--blood-red);
+  border: 1px solid var(--blood-red);
+  background: transparent;
+  text-transform: lowercase;
+}
+
+.msg-btn-search:hover {
+  background: var(--blood-red);
+  color: black;
+}
+
+/* --- Terminal Search Refinement --- */
+
+/* 1. Hide the arrows (spinners) in number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* For Firefox */
+}
+
+/* 2. Fix the placeholder color to faded dark red */
+.search-bar input::placeholder {
+  color: rgba(139, 0, 0, 0.5); /* Using var(--blood-red) with 50% opacity */
+  opacity: 1; /* Ensures browser doesn't override it */
+}
+
+/* For Internet Explorer/Edge */
+.search-bar input:-ms-input-placeholder {
+  color: rgba(139, 0, 0, 0.5);
+}
+
+/* For Firefox */
+.search-bar input::-moz-placeholder {
+  color: rgba(139, 0, 0, 0.5);
+}
+
+.msg-btn-search:hover {
+  background: var(--blood-red) !important;
+  color: var(--pitch-black) !important;
+  box-shadow: 0 0 8px var(--blood-red);
+}
+
+/* --- Chat Widget Fixes --- */
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 450px; /* Fixed height */
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--blood-red);
+}
+
+.chat-header {
+  background: var(--blood-red); /* Maroon background */
+  color: #000; /* Black text */
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.chat-header span {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-chat {
+  background: transparent;
+  border: none;
+  color: #000;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+#chat-body {
+  flex: 1; /* Takes up all available space */
+  overflow-y: auto; /* Scrollable area */
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#chat-footer {
+  border-top: 1px solid var(--dim-red);
+  padding: 10px;
+  background: #000;
+  display: flex;
+  gap: 10px;
+  margin-top: auto; /* Keeps it at the bottom */
+}
+
+/* Chat List Items */
+.chat-inbox-item {
+  padding: 12px;
+  border-bottom: 1px solid var(--dim-red) !important; /* Red divider */
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chat-inbox-item:hover {
+  background: rgba(139, 0, 0, 0.1);
+}
+
+.chat-inbox-item strong {
+  color: var(--bright-red);
+}
+
+.chat-inbox-item small {
+  color: var(--blood-red);
+}
+
+.github-link {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+  color: #8b0000; /* maroon */
+  transition: all 0.2s ease;
+}
+
+.github-link svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor; /* important */
+}
+
+/* Bright blood red on hover */
+.github-link:hover {
+  color: #ff3131;
+}
+
+.github-link:hover svg {
+  animation: github-glitch 0.3s infinite;
+}
+
+.github-link:active svg {
+  animation: github-glitch 0.1s infinite;
+}
+
+@keyframes github-glitch {
+  0% {
+    transform: translate(0);
+    filter: drop-shadow(0 0 3px #ff3131);
+  }
+  25% {
+    transform: translate(-1px, 1px);
+  }
+  50% {
+    transform: translate(1px, -1px);
+  }
+  75% {
+    transform: translate(-1px, -1px);
+  }
+  100% {
+    transform: translate(0);
+  }
 }

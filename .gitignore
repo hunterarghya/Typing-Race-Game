@@ -57,7 +57,7 @@ dist/
 # =========================
 # Project-specific
 # =========================
-recycle_bin/
+# recycle_bin/
 
 # =========================
 # Temporary files

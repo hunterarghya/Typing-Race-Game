@@ -2,159 +2,161 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Typing Game - Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OldMonkey - Terminal</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
-  <body>
-    <h1>User Profile</h1>
-    <div id="profile-details">
-      <p>Loading profile...</p>
-    </div>
+  <body class="dashboard-body">
+    <header class="top-nav">
+      <div style="display: flex; align-items: center">
+        <div class="logo">oldmonkey</div>
 
-    <div id="stats-summary">
-      <p>
-        <strong>Total Multiplayer Games:</strong>
-        <span id="total-games">0</span>
-      </p>
-    </div>
-
-    <hr />
-    <h3>Game History (Multiplayer Only)</h3>
-    <div
-      id="history-container"
-      style="
-        max-height: 300px;
-        overflow-y: auto;
-        border: 1px solid #eee;
-        padding: 10px;
-      "
-    >
-      <ul id="history-list" style="list-style: none; padding: 0"></ul>
-    </div>
-
-    <hr />
-    <h3>Start a Game</h3>
-    <div id="game-controls">
-      <button onclick="createNewGame('bot')">Play with Bot</button>
-      <button onclick="createNewGame('private')">Create Game Link</button>
-    </div>
-
-    <div
-      id="invite-section"
-      style="
-        display: none;
-        margin-top: 20px;
-        padding: 10px;
-        border: 1px solid #ccc;
-      "
-    >
-      <p>Share this link with a friend:</p>
-      <input type="text" id="invite-link" readonly style="width: 80%" />
-      <button onclick="goToArena()">Join Game</button>
-    </div>
-
-    <br />
-
-    <hr />
-    <div id="player-search-section">
-      <h3>Find Players</h3>
-      <div style="margin-bottom: 10px">
-        <input
-          type="text"
-          id="search-username"
-          placeholder="Search username..."
-        />
-        <label>WPM: </label>
-        <input
-          type="number"
-          id="search-min-wpm"
-          placeholder="Min"
-          style="width: 50px"
-          value="0"
-        />
-        <input
-          type="number"
-          id="search-max-wpm"
-          placeholder="Max"
-          style="width: 50px"
-          value="200"
-        />
-        <button onclick="searchPlayers(1)">Search</button>
-      </div>
-
-      <div
-        id="search-results-container"
-        style="border: 1px solid #ddd; padding: 10px; min-height: 50px"
-      >
-        <ul id="search-results-list" style="list-style: none; padding: 0">
-          <p style="color: gray">Search for players to challenge them!</p>
-        </ul>
-        <div id="search-pagination"></div>
-      </div>
-    </div>
-    <br />
-    <button
-      id="chat-toggle-btn"
-      onclick="toggleChat()"
-      style="position: relative"
-    >
-      💬
-      <div
-        id="chat-badge"
-        style="
-          display: none;
-          position: absolute;
-          top: -5px;
-          right: -5px;
-          background: red;
-          color: white;
-          border-radius: 50%;
-          width: 18px;
-          height: 18px;
-          font-size: 12px;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        0
-      </div>
-    </button>
-
-    <div id="chat-widget">
-      <div id="chat-header">
-        <span id="chat-title" onclick="loadInbox()" style="cursor: pointer"
-          >Chats</span
+        <a
+          href="https://github.com/hunterarghya/Typing-Race-Game"
+          target="_blank"
+          class="github-link"
+          title="View Source Code"
         >
-        <button
-          onclick="toggleChat()"
-          style="background: none; border: none; color: white; cursor: pointer"
-        >
-          ✖
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.02c-3.2.7-3.88-1.54-3.88-1.54-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.75 2.67 1.24 3.32.95.1-.74.4-1.24.73-1.52-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.3 1.18-3.11-.12-.29-.51-1.45.11-3.02 0 0 .97-.31 3.18 1.18a11.03 11.03 0 0 1 5.79 0C17.33 5.24 18.3 5.55 18.3 5.55c.62 1.57.23 2.73.11 3.02.73.81 1.18 1.85 1.18 3.11 0 4.43-2.69 5.4-5.25 5.69.41.35.77 1.04.77 2.1v3.11c0 .31.21.68.8.56A10.51 10.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"
+            />
+          </svg>
+        </a>
+      </div>
+      <div class="nav-controls">
+        <button id="chat-toggle-btn" onclick="toggleChat()">
+          SMS <span id="chat-badge">0</span>
         </button>
+        <button class="logout-btn" onclick="handleLogout()">logout</button>
       </div>
-      <div id="chat-body" style="display: flex; flex-direction: column"></div>
-      <div id="chat-footer" style="display: none">
-        <input
-          type="text"
-          id="chat-input"
-          placeholder="Type a message..."
-          onkeypress="handleChatKey(event)"
-        />
-        <button onclick="sendMessage()">Send</button>
+    </header>
+
+    <main class="dashboard-grid">
+      <section class="column-left">
+        <div class="hacker-card profile-card">
+          <div class="card-header">
+            <span id="profile-card-title">profile</span>
+            <div class="window-dots">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+
+          <div id="profile-content" class="card-body">
+            <p class="loading-text">system.loading...</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="column-right">
+        <div class="hacker-card controls-card">
+          <div class="card-header">game_controls</div>
+
+          <div class="card-body" id="game-controls">
+            <div class="button-group">
+              <button class="glitch-btn" onclick="createNewGame('bot')">
+                play_with_bot
+              </button>
+              <button class="glitch-btn" onclick="createNewGame('private')">
+                generate_link
+              </button>
+            </div>
+
+            <div id="invite-section" class="link-display" style="display: none">
+              <div class="terminal-input-wrapper">
+                <input type="text" id="invite-link" readonly />
+                <button
+                  class="copy-icon-btn"
+                  onclick="copyInviteLink()"
+                  id="copy-btn"
+                  title="Copy Link"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect
+                      x="9"
+                      y="9"
+                      width="13"
+                      height="13"
+                      rx="2"
+                      ry="2"
+                    ></rect>
+                    <path
+                      d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+              <button class="join-btn" onclick="goToArena()">join_room</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hacker-card search-card">
+          <div class="card-header">find_players</div>
+          <div class="card-body">
+            <div class="search-bar">
+              <input
+                type="text"
+                id="search-username"
+                placeholder="user_query..."
+              />
+              <div class="range-inputs">
+                <input
+                  type="number"
+                  id="search-min-wpm"
+                  placeholder="min"
+                  value="0"
+                />
+                <input
+                  type="number"
+                  id="search-max-wpm"
+                  placeholder="max"
+                  value="200"
+                />
+              </div>
+              <button onclick="searchPlayers(1)">execute_search</button>
+            </div>
+            <div id="search-results-container">
+              <ul id="search-results-list"></ul>
+              <div id="search-pagination" class="hacker-pagination"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="chat-widget" class="glass-modal">
+      <div class="chat-container">
+        <div class="chat-header">
+          <span id="chat-title" onclick="loadInbox()">recent_messages</span>
+          <button class="close-chat" onclick="toggleChat()">✖</button>
+        </div>
+        <div id="chat-body"></div>
+        <div id="chat-footer" style="display: none">
+          <input
+            type="text"
+            id="chat-input"
+            placeholder="type_message..."
+            onkeypress="handleChatKey(event)"
+          />
+          <button onclick="sendMessage()">➤</button>
+        </div>
       </div>
     </div>
-    <br />
-    <button onclick="handleLogout()">Logout</button>
-
-    <!-- <script src="script.js"></script>
-    <script>
-      // Auto-load profile on page load
-      window.onload = fetchProfile;
-    </script> -->
 
     <script src="script.js"></script>
-
     <script>
-      // Consolidated onload logic
       window.onload = function () {
         if (localStorage.getItem("access_token")) {
           fetchProfile();
@@ -166,12 +168,3 @@
     </script>
   </body>
 </html>
-
-<!-- <script src="script.js"></script> -->
-<!-- <script>
-  window.onload = function () {
-    if (localStorage.getItem("access_token")) {
-      fetchProfile();
-    }
-  };
-</script> -->

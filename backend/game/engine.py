@@ -8,7 +8,7 @@ async def spawn_bot(manager, room_id: str, target_wpm: int, paragraph: str):
     Simulates a player typing by broadcasting progress at intervals.
     """
     # Wait 4 seconds (3s countdown + 1s buffer for frontend sync)
-    await asyncio.sleep(4)
+    await asyncio.sleep(1.5)
     
     total_chars = len(paragraph)
     # WPM to Delay: (60 seconds / (WPM * 5 characters per word))

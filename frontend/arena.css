@@ -1,0 +1,206 @@
+:root {
+  /* Dashboard Theme Colors */
+  --pitch-black: #000000;
+  --blood-red: #8b0000; /* Maroon */
+  --bright-red: #ff3131; /* Primary Action */
+  --dim-red: #4a0000; /* Borders/Dividers */
+  --text-grey: #a0a0a0;
+  --correct-green: #00ff41; /* Classic Terminal Green */
+  --win-green: #00ff41;
+}
+
+body.arena-body {
+  background-color: var(--pitch-black);
+  color: white;
+  font-family: "Roboto Mono", monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.arena-wrapper {
+  width: 90%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+}
+
+#lobby-zone {
+  text-align: center;
+
+  padding: 20px;
+}
+
+#lobby-zone h2 {
+  color: var(--bright-red);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+#game-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30px;
+}
+
+/* Stat Groups */
+.stat-group div {
+  font-size: 1.2rem;
+  color: var(--bright-red);
+}
+
+.stat-group small {
+  color: var(--text-grey);
+  letter-spacing: 1px;
+}
+
+.timer-zone {
+  text-align: center;
+}
+
+#timer {
+  font-size: 3rem;
+  color: var(--bright-red);
+  font-weight: bold;
+  text-shadow: 0 0 10px var(--blood-red);
+}
+
+#arena-main {
+  background: #050505;
+  padding: 40px;
+  border-radius: 4px;
+  position: relative;
+  min-height: 250px;
+  border: 1px solid var(--dim-red);
+  box-shadow: 0 0 20px rgba(139, 0, 0, 0.2);
+}
+
+#text-display {
+  font-size: 24px;
+  line-height: 1.6;
+  letter-spacing: 1px;
+  color: #444;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+/* Character States */
+.char {
+  position: relative;
+}
+.char.correct {
+  color: var(--correct-green);
+  text-shadow: 0 0 5px var(--correct-green);
+}
+.char.incorrect {
+  color: var(--pitch-black);
+  background: var(--bright-red);
+}
+.char.current {
+  border-left: 2px solid var(--bright-red);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% {
+    border-color: transparent;
+  }
+}
+
+/* Progress Bars */
+.progress-container {
+  width: 100%;
+  height: 4px;
+  background: #1a1a1a;
+  margin-top: 15px;
+  overflow: hidden;
+  border: 1px solid var(--dim-red);
+}
+
+.bar.self {
+  background: var(--bright-red);
+  box-shadow: 0 0 10px var(--bright-red);
+}
+
+.bar.opp {
+  background: var(--blood-red);
+}
+
+/* Buttons */
+.main-btn,
+.exit-btn {
+  position: relative;
+  margin-top: auto;
+  background: var(--pitch-black);
+  z-index: 10;
+  padding: 15px;
+}
+
+.main-btn {
+  border: 1px solid var(--bright-red);
+  color: var(--bright-red);
+}
+
+.main-btn:hover {
+  background: var(--bright-red);
+  color: var(--pitch-black);
+}
+
+.exit-btn {
+  border: 1px solid var(--blood-red);
+  color: var(--blood-red);
+  margin-top: 20px;
+}
+
+.exit-btn:hover {
+  background: var(--blood-red);
+  color: var(--pitch-black);
+}
+
+#keyboard-handler {
+  opacity: 0;
+  position: absolute;
+  z-index: -1;
+}
+
+.char.opponent-ghost {
+  border-bottom: 2px solid var(--blood-red);
+}
+
+/* --- Progress Section --- */
+.progress-section {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.progress-container {
+  width: 100%;
+  height: 12px;
+  background: #111;
+  border-radius: 2px;
+  border: 1px solid var(--dim-red);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bar {
+  width: 0%;
+  height: 50%;
+  transition: width 0.3s ease;
+}
+
+/* Specific colors for the two players */
+#my-bar {
+  background: var(--bright-red);
+  box-shadow: 0 0 10px var(--bright-red);
+  height: 6px;
+}
+
+#opponent-bar {
+  background: var(--blood-red);
+  height: 6px;
+}

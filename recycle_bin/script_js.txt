@@ -150,8 +150,8 @@ async function fetchProfile() {
   const token = localStorage.getItem("access_token");
   if (!token) return;
 
-  viewedUsername = null;
-  document.getElementById("profile-card-title").innerText = "my_profile";
+  viewedUsername = null; // Reset to "self"
+  document.getElementById("game-controls").style.display = "block"; // Show game buttons
 
   try {
     const response = await fetch(`${API_URL}/auth/me`, {
@@ -159,81 +159,48 @@ async function fetchProfile() {
     });
     const data = await handleResponse(response);
 
-    // Update the Profile Header
-    document.getElementById("profile-content").innerHTML = `
-            <h1 class="profile-name">${data.name}</h1>
-            <p class="profile-sub">${data.username}</p>
-            <p class="profile-sub">${data.email}</p>
-            
-            <div class="stats-row">
-                <div class="stat-item"><span id="profile-rating">${data.rating}</span><label>rating</label></div>
-                <div class="stat-item"><span id="profile-speed">${data.highest_speed || 0}</span><label>top_speed</label></div>
-                <div class="stat-item"><span id="total-games">--</span><label>games</label></div>
-            </div>
-
-            <div class="history-scroll" id="history-list"></div>
-            <div id="pagination-controls" class="hacker-pagination"></div>
-        `;
-
-    // Now fetch the history which will fill in the "total-games" span
-    fetchHistory(1);
+    document.getElementById("profile-details").innerHTML = `
+      <p><strong>Name:</strong> ${data.name}</p>
+      <p><strong>Username:</strong> ${data.username} (You)</p>
+      <p><strong>Email:</strong> ${data.email}</p>
+      <p><strong>Rating:</strong> ${data.rating} 🏆</p>
+      <p><strong>Highest Speed:</strong> ${data.highest_speed || 0} WPM ⚡</p>
+    `;
+    fetchHistory(1); // Fetch own history
   } catch (err) {
-    console.error(err);
+    console.error("Profile load failed:", err);
   }
 }
 
 async function viewOtherProfile(username) {
-  if (["Unknown", "Monkey 🐒", "Guest"].includes(username)) return;
+  if (
+    username === "Unknown" ||
+    username === "Monkey 🐒" ||
+    username === "Guest"
+  )
+    return;
 
   viewedUsername = username;
-  const titleArea = document.getElementById("profile-card-title");
-  // Added a small back arrow for better UX
-  titleArea.innerHTML = `<span onclick="fetchProfile()" style="cursor:pointer; color: var(--bright-cyan);"> < [ back_to_profile ]</span>`;
+  document.getElementById("game-controls").style.display = "none"; // Hide game buttons for others
 
   try {
     const response = await fetch(`${API_URL}/auth/public/profile/${username}`);
     const data = await handleResponse(response);
 
-    // FIX: We must include the id="total-games" span here too!
-    document.getElementById("profile-content").innerHTML = `
-            <h1 class="profile-name">${data.name}</h1>
-            <p class="profile-sub">${data.username}</p>
-            
-            <button class="msg-btn-profile" onclick="openChatFromProfile('${data.username}')">
-                send_message
-            </button>
-
-            <div class="stats-row">
-                <div class="stat-item"><span>${data.rating}</span><label>rating</label></div>
-                <div class="stat-item"><span>${data.highest_speed || 0}</span><label>top_speed</label></div>
-                <div class="stat-item"><span id="total-games">--</span><label>games</label></div>
-            </div>
-
-            <div class="history-scroll" id="history-list"></div>
-            <div id="pagination-controls" class="hacker-pagination"></div>
-        `;
-
-    // call history for the other player
+    document.getElementById("profile-details").innerHTML = `
+      <button onclick="fetchProfile()" style="margin-bottom:10px;">⬅️ Back to My Profile</button>
+      <button onclick="openChatFromProfile('${data.username}')" style="margin-left: 10px; background-color: #007bff; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer;">
+          💬 Message
+        </button>
+      <p><strong>Name:</strong> ${data.name}</p>
+      <p><strong>Username:</strong> ${data.username}</p>
+      <p><strong>Rating:</strong> ${data.rating} 🏆</p>
+      <p><strong>Highest Speed:</strong> ${data.highest_speed || 0} WPM ⚡</p>
+    `;
     fetchHistory(1, username);
   } catch (err) {
-    alert(err.message);
+    alert("Could not load profile: " + err.message);
   }
-}
-
-function copyInviteLink() {
-  const linkInput = document.getElementById("invite-link");
-  linkInput.select();
-  linkInput.setSelectionRange(0, 99999); // For mobile
-  navigator.clipboard.writeText(linkInput.value);
-
-  const btn = document.getElementById("copy-btn");
-  const originalColor = btn.style.color;
-
-  // Feedback: Change color briefly
-  btn.style.color = "var(--win-green)";
-  setTimeout(() => {
-    btn.style.color = originalColor;
-  }, 1500);
 }
 
 let currentPage = 1;
@@ -243,6 +210,7 @@ async function fetchHistory(page = 1, username = null) {
   currentPage = page;
 
   try {
+    // If username is provided, use public endpoint, else use private "/history"
     const url = username
       ? `${API_URL}/auth/public/history/${username}?page=${page}&limit=10`
       : `${API_URL}/auth/history?page=${page}&limit=10`;
@@ -252,36 +220,31 @@ async function fetchHistory(page = 1, username = null) {
     const response = await fetch(url, { headers });
     const data = await handleResponse(response);
 
-    // SAFETY CHECK: Only update if the element exists on the current screen
-    const totalGamesElem = document.getElementById("total-games");
-    if (totalGamesElem) {
-      totalGamesElem.innerText = data.total_games;
-    }
-
+    document.getElementById("total-games").innerText = data.total_games;
     const list = document.getElementById("history-list");
-    if (!list) return; // Exit if history list container isn't ready
-
     list.innerHTML = "";
 
     data.history.forEach((game) => {
-      // ... keep existing resultColor and li logic here ...
       const resultColor =
         game.result === "WON"
-          ? "#00ff41"
+          ? "green"
           : game.result === "LOST"
-            ? "#ff3131"
-            : "#ffcc00";
+            ? "red"
+            : "orange";
       const li = document.createElement("li");
-      li.className = "history-entry"; // Use a class for easier CSS styling
+      li.style.borderBottom = "1px solid #ccc";
+      li.style.padding = "10px 0";
+
       li.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px border-color: rgba(0,255,65,0.2);">
-            <div style="flex: 1;">${username || "Me"}: <strong>${game.my_wpm}</strong></div>
-            <div style="flex: 0.5; text-align: center; color: ${resultColor};">[${game.result}]</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1;">${username || "Me"}: <strong>${game.my_wpm}</strong> WPM</div>
+            <div style="flex: 0.5; text-align: center; color: ${resultColor}; font-weight: bold;">${game.result}</div>
             <div style="flex: 1; text-align: right;">
-                <a href="javascript:void(0)" onclick="viewOtherProfile('${game.opp_name}')" style="color: var(--bright-cyan);">${game.opp_name}</a>: 
-                <strong>${game.opp_wpm}</strong>
+                <a href="javascript:void(0)" onclick="viewOtherProfile('${game.opp_name}')">${game.opp_name}</a>: 
+                <strong>${game.opp_wpm}</strong> WPM
             </div>
         </div>
+        <div style="font-size: 0.8em; color: gray; margin-top: 4px;">${game.date}</div>
       `;
       list.appendChild(li);
     });
@@ -390,29 +353,20 @@ async function searchPlayers(page = 1) {
 
     data.users.forEach((user) => {
       const li = document.createElement("li");
-      li.style.padding = "15px 0";
-      li.style.borderBottom = "1px solid var(--dim-red)";
-      li.style.listStyle = "none";
-
+      li.style.padding = "10px";
+      li.style.borderBottom = "1px solid #eee";
       li.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span>
-              <strong style="cursor:pointer; color: var(--bright-red); font-size: 1.1rem;" 
-                      onclick="viewOtherProfile('${user.username}')">
-                  ${user.username}
-              </strong> 
-              <br>
-              <small style="color: var(--blood-red); font-family: 'Roboto Mono', monospace;">
-                speed: ${user.highest_speed} wpm | rating: ${user.rating}
-              </small>
-          </span>
-          <button class="msg-btn-search" 
-                  onclick="openChatFromProfile('${user.username}')" 
-                  style="padding: 5px 15px; border: 1px solid var(--blood-red); color: var(--blood-red); background: transparent; cursor: pointer;">
-            message
-          </button>
-      </div>
-    `;
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>
+                        <strong style="cursor:pointer; color: #007bff;" onclick="viewOtherProfile('${user.username}')">
+                            ${user.username}
+                        </strong> 
+                        <br>
+                        <small style="color: #666;">Speed: ${user.highest_speed} WPM | Rating: ${user.rating}</small>
+                    </span>
+                    <button onclick="openChat('${user.username}')" style="padding: 5px 10px;">Message</button>
+                </div>
+            `;
       list.appendChild(li);
     });
 
@@ -458,12 +412,10 @@ function toggleChat() {
 
 async function loadInbox() {
   activeChatUser = null;
-  // Update header text to be clean
-  document.getElementById("chat-title").innerText = "recent_chats";
+  document.getElementById("chat-title").innerText = "Recent Chats";
   document.getElementById("chat-footer").style.display = "none";
-
   const body = document.getElementById("chat-body");
-  body.innerHTML = "loading...";
+  body.innerHTML = "Loading...";
 
   const response = await fetch(`${API_URL}/chat/inbox`, {
     headers: {
@@ -474,28 +426,24 @@ async function loadInbox() {
 
   body.innerHTML = chats.length
     ? ""
-    : "<p style='text-align:center; color:var(--blood-red);'>no_messages_found</p>";
-
+    : "<p style='text-align:center; color:gray;'>No messages yet.</p>";
   chats.forEach((c) => {
     const div = document.createElement("div");
-    div.className = "chat-inbox-item"; // Use the new CSS class
+    div.style =
+      "padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;";
     div.onclick = () => openChat(c.username);
-    div.innerHTML = `<strong>${c.username}</strong><br><small>${c.last_msg.substring(0, 30)}...</small>`;
+    div.innerHTML = `<strong>${c.username}</strong><br><small>${c.last_msg.substring(0, 20)}...</small>`;
     body.appendChild(div);
   });
 }
 
 async function openChat(username) {
   activeChatUser = username;
-  // Use the < symbol instead of the arrow with black text on maroon header
-  document.getElementById("chat-title").innerHTML =
-    `<span style="color:black;">&lt; ${username}</span>`;
+  document.getElementById("chat-title").innerText = "⬅ " + username;
   document.getElementById("chat-footer").style.display = "flex";
-
   const body = document.getElementById("chat-body");
-  body.innerHTML = "loading_history...";
 
-  // 1. Tell the backend messages are read
+  // --- Tell the backend these messages are now read ---
   try {
     fetch(`${API_URL}/chat/mark-read/${username}`, {
       method: "POST",
@@ -506,34 +454,25 @@ async function openChat(username) {
   } catch (e) {
     console.error("Error marking messages as read", e);
   }
+  // ---------------------------------------------------------
 
-  // 2. Fetch the actual message history
-  try {
-    const response = await fetch(`${API_URL}/chat/history/${username}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-      },
-    });
-    const messages = await response.json();
+  body.innerHTML = "Loading history...";
 
-    // 3. Render the messages
-    body.innerHTML = "";
-    messages.forEach((m) => {
-      const div = document.createElement("div");
-      div.className = `msg ${m.is_me ? "me" : "them"}`;
-      // Applying your red terminal theme colors
-      div.style.color = m.is_me ? "var(--bright-red)" : "var(--blood-red)";
-      div.innerText = m.text;
-      body.appendChild(div);
-    });
+  const response = await fetch(`${API_URL}/chat/history/${username}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+    },
+  });
+  const messages = await response.json();
 
-    // 4. Auto-scroll to bottom
-    body.scrollTop = body.scrollHeight;
-  } catch (err) {
-    body.innerHTML =
-      "<p style='color:var(--blood-red);'>error_loading_history</p>";
-    console.error(err);
-  }
+  body.innerHTML = "";
+  messages.forEach((m) => {
+    const div = document.createElement("div");
+    div.className = `msg ${m.is_me ? "me" : "them"}`;
+    div.innerText = m.text;
+    body.appendChild(div);
+  });
+  body.scrollTop = body.scrollHeight;
 }
 
 async function sendMessage() {

@@ -111,7 +111,7 @@ if (roomId) {
 
     if (data.type === "PLAYER_READY") {
       document.getElementById("lobby-status").innerText =
-        "Opponent is ready! Click yours... Go full screen (F11) for best experience";
+        "Opponent is ready! Click yours.";
     }
 
     if (data.type === "REMATCH_REQUESTED") {
@@ -170,6 +170,54 @@ function sendReady() {
       "You are ready! Waiting for opponent...";
   }
 }
+
+// function startCountdown() {
+//   let count = 3;
+//   inputField.disabled = true;
+
+//   const countdownInterval = setInterval(() => {
+//     if (count > 0) {
+//       textDisplay.innerHTML = `<h1 class="countdown-text">${count}</h1>`;
+//       count--;
+//     } else {
+//       clearInterval(countdownInterval);
+//       gameStarted = true;
+//       inputField.disabled = false;
+//       initGame();
+//       isTyping = true;
+//       timeElapsed = 0;
+
+//       if (socket && socket.readyState === WebSocket.OPEN) {
+//         socket.send(
+//           JSON.stringify({
+//             type: "progress",
+//             charIndex: 0,
+//             wpm: 0,
+//             accuracy: 100,
+//           }),
+//         );
+//       }
+
+//       const heartbeatId = setInterval(() => {
+//         if (!gameStarted) {
+//           clearInterval(heartbeatId);
+//           return;
+//         }
+//         updateStats();
+//         if (socket && socket.readyState === WebSocket.OPEN) {
+//           socket.send(
+//             JSON.stringify({
+//               type: "progress",
+//               charIndex: charIndex,
+//               wpm: wpmDisplay.innerText,
+//               accuracy: accuracyDisplay.innerText,
+//             }),
+//           );
+//         }
+//       }, 1000);
+//     }
+//   }, 1000);
+// }
 
 function startCountdown() {
   inputField.disabled = true;
@@ -242,9 +290,6 @@ function updateOpponentUI(data) {
 
 function initGame() {
   textDisplay.innerHTML = "";
-  // Reset scroll position to top for new game
-  const arenaMain = document.getElementById("arena-main");
-  if (arenaMain) arenaMain.scrollTop = 0;
   // Clear all previous opponent visual artifacts
   const opponentBar = document.getElementById("opponent-bar");
   opponentBar.style.width = "0%";

@@ -4,15 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Arena - Pro Typing Game</title>
-    <link rel="stylesheet" href="arena.css" />
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body class="arena-body">
     <div class="arena-wrapper">
       <div id="lobby-zone">
-        <p id="lobby-status">
-          Waiting for players to connect... Go full screen (F11) for best
-          experience
-        </p>
+        <h2>Game Lobby</h2>
+        <p id="lobby-status">Waiting for players to connect...</p>
         <button id="ready-btn" onclick="sendReady()" class="main-btn">
           I'm Ready
         </button>

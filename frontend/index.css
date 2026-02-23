@@ -1,0 +1,161 @@
+:root {
+  --blood-red: #8b0000;
+  --bright-red: #ff3131;
+  --dim-red: #4a0000;
+  --pitch-black: #050505;
+}
+
+body.dashboard-body {
+  background: radial-gradient(circle, #1a0000 0%, var(--pitch-black) 100%);
+  color: var(--blood-red);
+  font-family: "Roboto Mono", monospace;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-nav {
+  padding: 20px 40px;
+}
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--blood-red);
+}
+
+.auth-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hacker-card {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid var(--dim-red);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 0 20px rgba(139, 0, 0, 0.2);
+}
+
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--dim-red);
+}
+
+.auth-tabs button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--blood-red);
+  padding: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+}
+
+.auth-tabs button.active {
+  color: var(--bright-red);
+  background: rgba(139, 0, 0, 0.1);
+  border-bottom: 2px solid var(--bright-red);
+}
+
+.card-body {
+  padding: 30px;
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  background: #000;
+  border: 1px solid var(--dim-red);
+  color: var(--bright-red);
+  padding: 10px;
+  margin-bottom: 15px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.glitch-btn,
+.join-btn,
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  background: transparent;
+  border: 1px solid var(--blood-red);
+  color: var(--blood-red);
+  font-family: inherit;
+  cursor: pointer;
+  text-transform: uppercase;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.google-btn:hover {
+  background: var(--blood-red);
+  color: #000;
+}
+
+.google-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.glitch-btn:hover,
+.join-btn:hover {
+  background: var(--blood-red);
+  color: #000;
+}
+
+.google-btn {
+  border-color: #4285f4;
+  color: #4285f4;
+}
+
+.forgot-link {
+  color: var(--blood-red);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.dim-hr {
+  border: 0;
+  border-top: 1px solid var(--dim-red);
+  margin: 20px 0;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.close-link {
+  background: none;
+  border: none;
+  color: var(--bright-red);
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.modal-content {
+  padding: 30px;
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--bright-red);
+}

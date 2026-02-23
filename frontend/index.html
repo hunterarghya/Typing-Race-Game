@@ -2,70 +2,130 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Typing Game - Auth</title>
+    <title>Pro Typing Game - Auth</title>
+    <link rel="stylesheet" href="index.css" />
   </head>
-  <body>
-    <h1>Pro Typing Game</h1>
+  <body class="dashboard-body">
+    <nav class="top-nav">
+      <div class="logo">oldmonkey</div>
+    </nav>
 
-    <section id="register-section">
-      <h2>Register</h2>
-      <input type="text" id="reg-name" placeholder="Full Name" /><br />
-      <input type="text" id="reg-username" placeholder="Username" /><br />
-      <input type="email" id="reg-email" placeholder="Email" /><br />
-      <input type="password" id="reg-password" placeholder="Password" /><br />
-      <button onclick="handleRegister()">Register</button>
-      <div id="reg-otp-section" style="display: none">
-        <p>Enter OTP sent to email:</p>
-        <input type="text" id="reg-otp" placeholder="OTP" />
-        <button onclick="handleVerifyRegistration()">Verify Account</button>
+    <div class="auth-wrapper">
+      <div class="hacker-card">
+        <div class="auth-tabs">
+          <button id="tab-login" class="active" onclick="showAuth('login')">
+            LOGIN
+          </button>
+          <button id="tab-register" onclick="showAuth('register')">
+            REGISTER
+          </button>
+        </div>
+
+        <div class="card-body">
+          <section id="register-section" style="display: none">
+            <input type="text" id="reg-name" placeholder="Full Name" /><br />
+            <input type="text" id="reg-username" placeholder="Username" /><br />
+            <input type="email" id="reg-email" placeholder="Email" /><br />
+            <input
+              type="password"
+              id="reg-password"
+              placeholder="Password"
+            /><br />
+            <button class="glitch-btn" onclick="handleRegister()">
+              Register
+            </button>
+            <div id="reg-otp-section" style="display: none">
+              <p>Enter OTP sent to email:</p>
+              <input type="text" id="reg-otp" placeholder="OTP" />
+              <button class="join-btn" onclick="handleVerifyRegistration()">
+                Verify Account
+              </button>
+            </div>
+          </section>
+
+          <section id="login-section">
+            <input type="email" id="login-email" placeholder="Email" /> <br />
+            <input type="password" id="login-password" placeholder="Password" />
+            <br />
+            <a href="#" class="forgot-link" onclick="toggleModal(true)"
+              >Forgot Password?</a
+            ><br /><br />
+            <button class="glitch-btn" onclick="handleLogin()">Login</button>
+          </section>
+
+          <hr class="dim-hr" />
+
+          <button
+            class="google-btn"
+            onclick="window.location.href='http://localhost:10000/auth/login/google'"
+          >
+            Sign in with Google
+            <img
+              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              alt="Google"
+              class="google-icon"
+            />
+          </button>
+        </div>
       </div>
-    </section>
 
-    <hr />
-
-    <section id="login-section">
-      <h2>Login</h2>
-      <input type="email" id="login-email" placeholder="Email" /> <br />
-      <input type="password" id="login-password" placeholder="Password" />
-      <br />
-
-      <a href="#" onclick="toggleModal(true)">Forgot Password?</a><br /><br />
-
-      <button onclick="handleLogin()">Login</button>
-      <p>OR</p>
-      <button
-        onclick="window.location.href='http://localhost:10000/auth/login/google'"
-      >
-        Login with Google
-      </button>
-    </section>
-
-    <div
-      id="fp-modal"
-      style="
-        display: none;
-        border: 1px solid black;
-        padding: 20px;
-        margin-top: 20px;
-      "
-    >
-      <h3>Reset Password</h3>
-      <div id="fp-step-1">
-        <input type="email" id="fp-email" placeholder="Enter your email" />
-        <button onclick="handleForgotPassword()">Send OTP</button>
+      <div id="fp-modal" class="modal-overlay" style="display: none">
+        <div class="hacker-card modal-content">
+          <h3>Reset Password</h3>
+          <div id="fp-step-1">
+            <input
+              type="email"
+              id="fp-email"
+              placeholder="Enter your email"
+            /><br />
+            <button class="glitch-btn" onclick="handleForgotPassword()">
+              Send OTP
+            </button>
+          </div>
+          <div id="fp-step-2" style="display: none">
+            <input type="text" id="fp-otp" placeholder="Enter OTP" /><br />
+            <input
+              type="password"
+              id="fp-new-password"
+              placeholder="New Password"
+            /><br />
+            <button class="join-btn" onclick="handleResetPassword()">
+              Reset Password
+            </button>
+          </div>
+          <button class="close-link" onclick="toggleModal(false)">
+            [ Close ]
+          </button>
+        </div>
       </div>
-      <div id="fp-step-2" style="display: none">
-        <input type="text" id="fp-otp" placeholder="Enter OTP" /><br />
-        <input
-          type="password"
-          id="fp-new-password"
-          placeholder="New Password"
-        /><br />
-        <button onclick="handleResetPassword()">Reset Password</button>
-      </div>
-      <button onclick="toggleModal(false)">Close</button>
     </div>
 
     <script src="script.js"></script>
+    <script>
+      function showAuth(type) {
+        const loginSec = document.getElementById("login-section");
+        const regSec = document.getElementById("register-section");
+        const loginTab = document.getElementById("tab-login");
+        const regTab = document.getElementById("tab-register");
+
+        if (type === "login") {
+          loginSec.style.display = "block";
+          regSec.style.display = "none";
+          loginTab.classList.add("active");
+          regTab.classList.remove("active");
+        } else {
+          loginSec.style.display = "none";
+          regSec.style.display = "block";
+          regTab.classList.add("active");
+          loginTab.classList.remove("active");
+        }
+      }
+
+      function toggleModal(show) {
+        document.getElementById("fp-modal").style.display = show
+          ? "flex"
+          : "none";
+      }
+    </script>
   </body>
 </html>

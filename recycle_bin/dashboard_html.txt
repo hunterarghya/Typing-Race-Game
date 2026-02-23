@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Typing Game - Profile</title>
+  </head>
+  <body>
+    <h1>User Profile</h1>
+    <div id="profile-details">
+      <p>Loading profile...</p>
+    </div>
+
+    <div id="stats-summary">
+      <p>
+        <strong>Total Multiplayer Games:</strong>
+        <span id="total-games">0</span>
+      </p>
+    </div>
+
+    <hr />
+    <h3>Game History (Multiplayer Only)</h3>
+    <div
+      id="history-container"
+      style="
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        padding: 10px;
+      "
+    >
+      <ul id="history-list" style="list-style: none; padding: 0"></ul>
+    </div>
+
+    <hr />
+    <h3>Start a Game</h3>
+    <div id="game-controls">
+      <button onclick="createNewGame('bot')">Play with Bot</button>
+      <button onclick="createNewGame('private')">Create Game Link</button>
+    </div>
+
+    <div
+      id="invite-section"
+      style="
+        display: none;
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+      "
+    >
+      <p>Share this link with a friend:</p>
+      <input type="text" id="invite-link" readonly style="width: 80%" />
+      <button onclick="goToArena()">Join Game</button>
+    </div>
+
+    <br />
+
+    <hr />
+    <div id="player-search-section">
+      <h3>Find Players</h3>
+      <div style="margin-bottom: 10px">
+        <input
+          type="text"
+          id="search-username"
+          placeholder="Search username..."
+        />
+        <label>WPM: </label>
+        <input
+          type="number"
+          id="search-min-wpm"
+          placeholder="Min"
+          style="width: 50px"
+          value="0"
+        />
+        <input
+          type="number"
+          id="search-max-wpm"
+          placeholder="Max"
+          style="width: 50px"
+          value="200"
+        />
+        <button onclick="searchPlayers(1)">Search</button>
+      </div>
+
+      <div
+        id="search-results-container"
+        style="border: 1px solid #ddd; padding: 10px; min-height: 50px"
+      >
+        <ul id="search-results-list" style="list-style: none; padding: 0">
+          <p style="color: gray">Search for players to challenge them!</p>
+        </ul>
+        <div id="search-pagination"></div>
+      </div>
+    </div>
+    <br />
+    <button
+      id="chat-toggle-btn"
+      onclick="toggleChat()"
+      style="position: relative"
+    >
+      💬
+      <div
+        id="chat-badge"
+        style="
+          display: none;
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          background: red;
+          color: white;
+          border-radius: 50%;
+          width: 18px;
+          height: 18px;
+          font-size: 12px;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        0
+      </div>
+    </button>
+
+    <div id="chat-widget">
+      <div id="chat-header">
+        <span id="chat-title" onclick="loadInbox()" style="cursor: pointer"
+          >Chats</span
+        >
+        <button
+          onclick="toggleChat()"
+          style="background: none; border: none; color: white; cursor: pointer"
+        >
+          ✖
+        </button>
+      </div>
+      <div id="chat-body" style="display: flex; flex-direction: column"></div>
+      <div id="chat-footer" style="display: none">
+        <input
+          type="text"
+          id="chat-input"
+          placeholder="Type a message..."
+          onkeypress="handleChatKey(event)"
+        />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+    <br />
+    <button onclick="handleLogout()">Logout</button>
+
+    <!-- <script src="script.js"></script>
+    <script>
+      // Auto-load profile on page load
+      window.onload = fetchProfile;
+    </script> -->
+
+    <script src="script.js"></script>
+
+    <script>
+      // Consolidated onload logic
+      window.onload = function () {
+        if (localStorage.getItem("access_token")) {
+          fetchProfile();
+          startNotificationPolling();
+        } else {
+          window.location.href = "index.html";
+        }
+      };
+    </script>
+  </body>
+</html>
+
+<!-- <script src="script.js"></script> -->
+<!-- <script>
+  window.onload = function () {
+    if (localStorage.getItem("access_token")) {
+      fetchProfile();
+    }
+  };
+</script> -->
