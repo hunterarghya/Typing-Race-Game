@@ -1,4 +1,13 @@
-const API_URL = "http://localhost:10000";
+const isLocal =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+const API_URL = isLocal
+  ? "http://localhost:10000"
+  : "https://oldmonkey.onrender.com";
+const WS_BASE_URL = API_URL.replace("http", "ws");
+// -----------------------------
+
+// const API_URL = "http://localhost:10000";
 
 const urlParams = new URLSearchParams(window.location.search);
 const tokenFromUrl = urlParams.get("token");
@@ -50,6 +59,11 @@ async function handleResponse(response) {
 }
 
 // --- AUTH FUNCTIONS ---
+
+function handleGoogleLogin() {
+  // This now uses the dynamic API_URL
+  window.location.href = `${API_URL}/auth/login/google`;
+}
 
 // --- REGISTER ---
 

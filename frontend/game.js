@@ -1,3 +1,11 @@
+const isLocal =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+const API_URL = isLocal
+  ? "http://localhost:10000"
+  : "https://oldmonkey.onrender.com";
+const WS_BASE_URL = API_URL.replace("http", "ws");
+
 if (!localStorage.getItem("access_token")) {
   localStorage.setItem("redirect_after_login", window.location.href);
   window.location.href = "index.html";
@@ -38,7 +46,7 @@ let intervalId;
 
 if (roomId) {
   const token = localStorage.getItem("access_token");
-  socket = new WebSocket(`ws://localhost:10000/ws/game/${roomId}/${token}`);
+  socket = new WebSocket(`${WS_BASE_URL}/ws/game/${roomId}/${token}`);
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
