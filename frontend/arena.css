@@ -166,7 +166,9 @@ body.arena-body {
 }
 
 .char.opponent-ghost {
-  border-bottom: 2px solid var(--blood-red);
+  border-bottom: 4px solid var(--bright-red); /* Thicker line */
+  box-shadow: 0 4px 10px rgba(255, 49, 49, 0.6); /* Underglow effect */
+  transition: border-color 0.1s ease-in-out;
 }
 
 /* --- Progress Section --- */
